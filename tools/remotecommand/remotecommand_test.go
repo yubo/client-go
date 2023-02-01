@@ -28,17 +28,18 @@ import (
 	"testing"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	"k8s.io/apimachinery/pkg/util/httpstream/spdy"
-	remotecommandconsts "k8s.io/apimachinery/pkg/util/remotecommand"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/rest"
+	"github.com/yubo/client-go/rest"
+	metav1 "github.com/yubo/golib/api"
+	v1 "github.com/yubo/golib/api"
+	apierrors "github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/stream/httpstream"
+	"github.com/yubo/golib/stream/httpstream/spdy"
+	"github.com/yubo/golib/term"
+	remotecommandconsts "github.com/yubo/golib/util/remotecommand"
+	"github.com/yubo/golib/util/wait"
 )
 
-type AttachFunc func(in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan TerminalSize) error
+type AttachFunc func(in io.Reader, out, err io.WriteCloser, tty bool, resize <-chan term.TerminalSize) error
 type streamContext struct {
 	conn         io.Closer
 	stdinStream  io.ReadCloser
@@ -75,7 +76,7 @@ func (s *fakeMassiveDataPty) Write(p []byte) (int, error) {
 	return len(p), errors.New("return err")
 }
 
-func fakeMassiveDataAttacher(stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan TerminalSize) error {
+func fakeMassiveDataAttacher(stdin io.Reader, stdout, stderr io.WriteCloser, tty bool, resize <-chan term.TerminalSize) error {
 
 	copyDone := make(chan struct{}, 3)
 

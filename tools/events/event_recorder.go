@@ -20,20 +20,20 @@ import (
 	"fmt"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
-	eventsv1 "k8s.io/api/events/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/tools/record/util"
-	"k8s.io/client-go/tools/reference"
+	eventsv1 "github.com/yubo/golib/api/events/v1"
+	"github.com/yubo/client-go/tools/record/util"
+	"github.com/yubo/client-go/tools/reference"
+	metav1 "github.com/yubo/golib/api"
+	v1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/util/clock"
+	utilruntime "github.com/yubo/golib/util/runtime"
+	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/clock"
 )
 
 type recorderImpl struct {
-	scheme              *runtime.Scheme
+	//scheme              *runtime.Scheme
 	reportingController string
 	reportingInstance   string
 	*watch.Broadcaster
@@ -41,9 +41,9 @@ type recorderImpl struct {
 }
 
 func (recorder *recorderImpl) Eventf(regarding runtime.Object, related runtime.Object, eventtype, reason, action, note string, args ...interface{}) {
-	timestamp := metav1.MicroTime{time.Now()}
+	timestamp := metav1.MicroTime{Time: time.Now()}
 	message := fmt.Sprintf(note, args...)
-	refRegarding, err := reference.GetReference(recorder.scheme, regarding)
+	refRegarding, err := reference.GetReference(regarding)
 	if err != nil {
 		klog.Errorf("Could not construct reference to: '%#v' due to: '%v'. Will not report event: '%v' '%v' '%v'", regarding, err, eventtype, reason, message)
 		return
@@ -51,7 +51,7 @@ func (recorder *recorderImpl) Eventf(regarding runtime.Object, related runtime.O
 
 	var refRelated *v1.ObjectReference
 	if related != nil {
-		refRelated, err = reference.GetReference(recorder.scheme, related)
+		refRelated, err = reference.GetReference(related)
 		if err != nil {
 			klog.V(9).Infof("Could not construct reference to: '%#v' due to: '%v'.", related, err)
 		}

@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/utils/clock"
-	testingclock "k8s.io/utils/clock/testing"
-	"k8s.io/utils/integer"
+	"github.com/yubo/golib/util/clock"
+	testingclock "github.com/yubo/golib/util/clock/testing"
+	"github.com/yubo/golib/util/integer"
 )
 
 type backoffEntry struct {

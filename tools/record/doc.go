@@ -15,5 +15,5 @@ limitations under the License.
 */
 
 // Package record has all client logic for recording and reporting
-// "k8s.io/api/core/v1".Event events.
-package record // import "k8s.io/client-go/tools/record"
+// "github.com/yubo/golib/api".Event events.
+package record // import "github.com/yubo/client-go/tools/record"

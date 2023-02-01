@@ -17,9 +17,9 @@ limitations under the License.
 package events
 
 import (
-	eventsv1 "k8s.io/api/events/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	eventsv1 "github.com/yubo/golib/api/events/v1"
+	"github.com/yubo/client-go/tools/record"
+	"github.com/yubo/golib/runtime"
 	"k8s.io/klog/v2"
 )
 
@@ -49,7 +49,7 @@ type EventBroadcaster interface {
 
 	// NewRecorder returns an EventRecorder that can be used to send events to this EventBroadcaster
 	// with the event source set to the given event source.
-	NewRecorder(scheme *runtime.Scheme, reportingController string) EventRecorder
+	NewRecorder(reportingController string) EventRecorder
 
 	// StartEventWatcher enables you to watch for emitted events without usage
 	// of StartRecordingToSink. This lets you also process events in a custom way (e.g. in tests).

@@ -32,8 +32,8 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/client-go/util/keyutil"
-	netutils "k8s.io/utils/net"
+	"github.com/yubo/client-go/util/keyutil"
+	netutils "github.com/yubo/golib/util/net"
 )
 
 const duration365d = time.Hour * 24 * 365

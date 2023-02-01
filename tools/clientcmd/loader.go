@@ -27,13 +27,11 @@ import (
 	"github.com/imdario/mergo"
 	"k8s.io/klog/v2"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	restclient "k8s.io/client-go/rest"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
-	"k8s.io/client-go/util/homedir"
+	restclient "github.com/yubo/client-go/rest"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
+	"github.com/yubo/client-go/util/homedir"
+	"github.com/yubo/golib/runtime"
+	utilerrors "github.com/yubo/golib/util/errors"
 )
 
 const (
@@ -407,11 +405,13 @@ func Load(data []byte) (*clientcmdapi.Config, error) {
 	if len(data) == 0 {
 		return config, nil
 	}
-	decoded, _, err := clientcmdlatest.Codec.Decode(data, &schema.GroupVersionKind{Version: clientcmdlatest.Version, Kind: "Config"}, config)
+
+	_, err := clientcmdapi.Codec.Decode(data, config)
 	if err != nil {
 		return nil, err
 	}
-	return decoded.(*clientcmdapi.Config), nil
+
+	return config, nil
 }
 
 // WriteToFile serializes the config to yaml and writes it out to a file.  If not present, it creates the file with the mode 0600.  If it is present
@@ -464,7 +464,7 @@ func lockName(filename string) string {
 // Write serializes the config to yaml.
 // Encapsulates serialization without assuming the destination is a file.
 func Write(config clientcmdapi.Config) ([]byte, error) {
-	return runtime.Encode(clientcmdlatest.Codec, &config)
+	return runtime.Encode(clientcmdapi.Codec, &config)
 }
 
 func (rules ClientConfigLoadingRules) ResolvePaths() bool {

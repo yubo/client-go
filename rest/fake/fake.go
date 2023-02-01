@@ -22,11 +22,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/util/flowcontrol"
+	restclient "github.com/yubo/client-go/rest"
+	"github.com/yubo/client-go/util/flowcontrol"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
 )
 
 // CreateHTTPClient creates an http.Client that will invoke the provided roundTripper func
@@ -48,8 +47,8 @@ func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 // a specific server.
 type RESTClient struct {
 	NegotiatedSerializer runtime.NegotiatedSerializer
-	GroupVersion         schema.GroupVersion
-	VersionedAPIPath     string
+	//GroupVersion         schema.GroupVersion
+	VersionedAPIPath string
 
 	// Err is returned when any request would be made to the server. If Err is set,
 	// Req will not be recorded, Resp will not be returned, and Client will not be
@@ -72,7 +71,7 @@ func (c *RESTClient) Put() *restclient.Request {
 	return c.Verb("PUT")
 }
 
-func (c *RESTClient) Patch(pt types.PatchType) *restclient.Request {
+func (c *RESTClient) Patch(pt api.PatchType) *restclient.Request {
 	return c.Verb("PATCH").SetHeader("Content-Type", string(pt))
 }
 
@@ -88,9 +87,9 @@ func (c *RESTClient) Verb(verb string) *restclient.Request {
 	return c.Request().Verb(verb)
 }
 
-func (c *RESTClient) APIVersion() schema.GroupVersion {
-	return c.GroupVersion
-}
+//func (c *RESTClient) APIVersion() schema.GroupVersion {
+//	return c.GroupVersion
+//}
 
 func (c *RESTClient) GetRateLimiter() flowcontrol.RateLimiter {
 	return nil
@@ -98,9 +97,9 @@ func (c *RESTClient) GetRateLimiter() flowcontrol.RateLimiter {
 
 func (c *RESTClient) Request() *restclient.Request {
 	config := restclient.ClientContentConfig{
-		ContentType:  runtime.ContentTypeJSON,
-		GroupVersion: c.GroupVersion,
-		Negotiator:   runtime.NewClientNegotiator(c.NegotiatedSerializer, c.GroupVersion),
+		ContentType: runtime.ContentTypeJSON,
+		//GroupVersion: c.GroupVersion,
+		Negotiator: runtime.NewClientNegotiator(c.NegotiatedSerializer),
 	}
 	return restclient.NewRequestWithClient(&url.URL{Scheme: "https", Host: "localhost"}, c.VersionedAPIPath, config, CreateHTTPClient(c.do))
 }

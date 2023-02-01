@@ -30,8 +30,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/httpstream"
+	v1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/stream/httpstream"
 )
 
 type fakeDialer struct {

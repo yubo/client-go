@@ -27,7 +27,7 @@ import (
 	"sync"
 	"time"
 
-	utilnet "k8s.io/apimachinery/pkg/util/net"
+	utilnet "github.com/yubo/golib/util/net"
 	"k8s.io/klog/v2"
 )
 

@@ -19,11 +19,10 @@ package reference
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
 )
 
 var (
@@ -34,76 +33,42 @@ var (
 // GetReference returns an ObjectReference which refers to the given
 // object, or an error if the object doesn't follow the conventions
 // that would allow this.
-// TODO: should take a meta.Interface see https://issue.k8s.io/7127
-func GetReference(scheme *runtime.Scheme, obj runtime.Object) (*v1.ObjectReference, error) {
+// TODO: should take a meta.Interface see http://issue.k8s.io/7127
+func GetReference(obj runtime.Object) (*api.ObjectReference, error) {
 	if obj == nil {
 		return nil, ErrNilObject
 	}
-	if ref, ok := obj.(*v1.ObjectReference); ok {
+	if ref, ok := obj.(*api.ObjectReference); ok {
 		// Don't make a reference to a reference.
 		return ref, nil
 	}
 
-	// An object that implements only List has enough metadata to build a reference
-	var listMeta metav1.Common
-	objectMeta, err := meta.Accessor(obj)
-	if err != nil {
-		listMeta, err = meta.CommonAccessor(obj)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		listMeta = objectMeta
-	}
-
-	gvk := obj.GetObjectKind().GroupVersionKind()
-
-	// If object meta doesn't contain data about kind and/or version,
-	// we are falling back to scheme.
-	//
-	// TODO: This doesn't work for CRDs, which are not registered in scheme.
-	if gvk.Empty() {
-		gvks, _, err := scheme.ObjectKinds(obj)
-		if err != nil {
-			return nil, err
-		}
-		if len(gvks) == 0 || gvks[0].Empty() {
-			return nil, fmt.Errorf("unexpected gvks registered for object %T: %v", obj, gvks)
-		}
-		// TODO: The same object can be registered for multiple group versions
-		// (although in practise this doesn't seem to be used).
-		// In such case, the version set may not be correct.
-		gvk = gvks[0]
-	}
-
-	kind := gvk.Kind
-	version := gvk.GroupVersion().String()
-
-	// only has list metadata
-	if objectMeta == nil {
-		return &v1.ObjectReference{
-			Kind:            kind,
-			APIVersion:      version,
-			ResourceVersion: listMeta.GetResourceVersion(),
-		}, nil
-	}
-
-	return &v1.ObjectReference{
-		Kind:            kind,
-		APIVersion:      version,
-		Name:            objectMeta.GetName(),
-		Namespace:       objectMeta.GetNamespace(),
-		UID:             objectMeta.GetUID(),
-		ResourceVersion: objectMeta.GetResourceVersion(),
+	return &api.ObjectReference{
+		Kind:      getKind(obj),
+		Name:      getField("Name", obj),
+		Namespace: getField("Namespace", obj),
+		UID:       api.UID(getField("UID", obj)),
 	}, nil
 }
 
 // GetPartialReference is exactly like GetReference, but allows you to set the FieldPath.
-func GetPartialReference(scheme *runtime.Scheme, obj runtime.Object, fieldPath string) (*v1.ObjectReference, error) {
-	ref, err := GetReference(scheme, obj)
+func GetPartialReference(obj runtime.Object, fieldPath string) (*api.ObjectReference, error) {
+	ref, err := GetReference(obj)
 	if err != nil {
 		return nil, err
 	}
 	ref.FieldPath = fieldPath
 	return ref, nil
+}
+
+func getKind(sample interface{}) string {
+	return reflect.Indirect(reflect.ValueOf(sample)).Type().Name()
+}
+
+func getField(field string, in interface{}) string {
+	if v := reflect.Indirect(reflect.Indirect(
+		reflect.ValueOf(in)).FieldByName(field)); v.IsValid() && v.CanInterface() {
+		return fmt.Sprintf("%v", v.Interface())
+	}
+	return ""
 }

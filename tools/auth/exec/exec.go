@@ -22,22 +22,23 @@ import (
 	"fmt"
 	"os"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/pkg/apis/clientauthentication"
-	"k8s.io/client-go/pkg/apis/clientauthentication/install"
-	"k8s.io/client-go/rest"
+	"github.com/yubo/client-go/pkg/apis/clientauthentication"
+	"github.com/yubo/client-go/rest"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
 )
 
 const execInfoEnv = "KUBERNETES_EXEC_INFO"
 
-var scheme = runtime.NewScheme()
-var codecs = serializer.NewCodecFactory(scheme)
+//var scheme = runtime.NewScheme()
+var codecs = scheme.Codecs
 
-func init() {
-	install.Install(scheme)
-}
+//func init() {
+//	metav1.AddToGroupVersion(scheme, schema.GroupVersion{Version: "v1"})
+//	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+//	utilruntime.Must(v1beta1.AddToScheme(scheme))
+//	utilruntime.Must(clientauthentication.AddToScheme(scheme))
+//}
 
 // LoadExecCredentialFromEnv is a helper-wrapper around LoadExecCredential that loads from the
 // well-known KUBERNETES_EXEC_INFO environment variable.
@@ -67,35 +68,17 @@ func LoadExecCredentialFromEnv() (runtime.Object, *rest.Config, error) {
 // Note that the returned rest.Config will use anonymous authentication, since the exec plugin has
 // not returned credentials for this cluster yet.
 func LoadExecCredential(data []byte) (runtime.Object, *rest.Config, error) {
-	obj, gvk, err := codecs.UniversalDeserializer().Decode(data, nil, nil)
+	obj := &clientauthentication.ExecCredential{}
+	_, err := codecs.UniversalDeserializer().Decode(data, obj)
 	if err != nil {
 		return nil, nil, fmt.Errorf("decode: %w", err)
 	}
 
-	expectedGK := schema.GroupKind{
-		Group: clientauthentication.SchemeGroupVersion.Group,
-		Kind:  "ExecCredential",
-	}
-	if gvk.GroupKind() != expectedGK {
-		return nil, nil, fmt.Errorf(
-			"invalid group/kind: wanted %s, got %s",
-			expectedGK.String(),
-			gvk.GroupKind().String(),
-		)
-	}
-
-	// Explicitly convert object here so that we can return a nicer error message above for when the
-	// data represents an invalid type.
-	var execCredential clientauthentication.ExecCredential
-	if err := scheme.Convert(obj, &execCredential, nil); err != nil {
-		return nil, nil, fmt.Errorf("cannot convert to ExecCredential: %w", err)
-	}
-
-	if execCredential.Spec.Cluster == nil {
+	if obj.Spec.Cluster == nil {
 		return nil, nil, errors.New("ExecCredential does not contain cluster information")
 	}
 
-	restConfig, err := rest.ExecClusterToConfig(execCredential.Spec.Cluster)
+	restConfig, err := rest.ExecClusterToConfig(obj.Spec.Cluster)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot create rest.Config: %w", err)
 	}

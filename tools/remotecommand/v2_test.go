@@ -24,9 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"github.com/yubo/golib/api"
+	v1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/stream/httpstream"
+	"github.com/yubo/golib/util/wait"
 )
 
 type fakeReader struct {
@@ -47,7 +48,7 @@ type fakeStreamCreator struct {
 var _ streamCreator = &fakeStreamCreator{}
 
 func (f *fakeStreamCreator) CreateStream(headers http.Header) (httpstream.Stream, error) {
-	streamType := headers.Get(v1.StreamType)
+	streamType := headers.Get(api.StreamType)
 	f.created[streamType] = true
 	return nil, f.errors[streamType]
 }

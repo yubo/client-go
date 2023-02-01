@@ -16,15 +16,13 @@ limitations under the License.
 
 package v1
 
-import (
-	"k8s.io/apimachinery/pkg/runtime"
-)
+import "github.com/yubo/golib/runtime"
 
 // Where possible, json tags match the cli argument names.
 // Top level config objects and all values required for proper functioning are not "omitempty".  Any truly optional piece of config is allowed to be omitted.
 
 // Config holds the information needed to build connect to remote kubernetes clusters as a given user
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 type Config struct {
 	// Legacy field from pkg/api/types.go TypeMeta.
 	// TODO(jlowdermilk): remove this after eliminating downstream dependencies.
@@ -226,7 +224,7 @@ type ExecConfig struct {
 	// ProvideClusterInfo determines whether or not to provide cluster information,
 	// which could potentially contain very large CA data, to this exec plugin as a
 	// part of the KUBERNETES_EXEC_INFO environment variable. By default, it is set
-	// to false. Package k8s.io/client-go/tools/auth/exec provides helper methods for
+	// to false. Package github.com/yubo/client-go/tools/auth/exec provides helper methods for
 	// reading this environment variable.
 	ProvideClusterInfo bool `json:"provideClusterInfo"`
 

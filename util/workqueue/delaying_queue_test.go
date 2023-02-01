@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/wait"
-	testingclock "k8s.io/utils/clock/testing"
+	"github.com/yubo/golib/util/wait"
+	testingclock "github.com/yubo/golib/util/clock/testing"
 )
 
 func TestSimpleQueue(t *testing.T) {

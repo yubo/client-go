@@ -21,6 +21,6 @@ package auth
 
 import (
 	// Initialize client auth plugins for cloud providers.
-	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	_ "github.com/yubo/client-go/plugin/pkg/client/auth/azure"
+	_ "github.com/yubo/client-go/plugin/pkg/client/auth/gcp"
 )

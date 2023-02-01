@@ -67,7 +67,7 @@ import (
 	"encoding/json"
 	"os"
 
-	restclient "k8s.io/client-go/rest"
+	restclient "github.com/yubo/client-go/rest"
 )
 
 // Info holds Kubernetes API authorization config.  It is intended

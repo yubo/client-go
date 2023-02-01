@@ -17,30 +17,26 @@ limitations under the License.
 package exec
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/sets"
-	clientauthenticationv1 "k8s.io/client-go/pkg/apis/clientauthentication/v1"
-	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
-	clientcmdv1 "k8s.io/client-go/tools/clientcmd/api/v1"
+	clientcmdv1 "github.com/yubo/client-go/tools/clientcmd/api/v1"
+	"github.com/yubo/golib/util/sets"
 )
 
-func TestClientAuthenticationClusterTypesAreSynced(t *testing.T) {
-	t.Parallel()
-
-	for _, cluster := range []interface{}{
-		clientauthenticationv1beta1.Cluster{},
-		clientauthenticationv1.Cluster{},
-	} {
-		t.Run(fmt.Sprintf("%T", cluster), func(t *testing.T) {
-			t.Parallel()
-			testClientAuthenticationClusterTypesAreSynced(t, cluster)
-		})
-	}
-}
+//func TestClientAuthenticationClusterTypesAreSynced(t *testing.T) {
+//	t.Parallel()
+//
+//	for _, cluster := range []interface{}{
+//		clientauthenticationv1beta1.Cluster{},
+//		clientauthenticationv1.Cluster{},
+//	} {
+//		t.Run(fmt.Sprintf("%T", cluster), func(t *testing.T) {
+//			t.Parallel()
+//			testClientAuthenticationClusterTypesAreSynced(t, cluster)
+//		})
+//	}
+//}
 
 // testClusterTypesAreSynced ensures that the provided cluster type stays in sync
 // with clientcmdv1.Cluster.
@@ -140,25 +136,25 @@ func testClientAuthenticationClusterTypesAreSynced(t *testing.T, cluster interfa
 // TestAllClusterTypesAreSynced is a TODO so that we remember to write a test similar to
 // TestClientAuthenticationClusterTypesAreSynced for any future ExecCredential version. It should start failing
 // when someone adds support for any other ExecCredential type to this package.
-func TestAllClusterTypesAreSynced(t *testing.T) {
-	versionsThatDontNeedTests := sets.NewString(
-		// The internal Cluster type should only be used...internally...and therefore doesn't
-		// necessarily need to be synced with clientcmdv1.
-		runtime.APIVersionInternal,
-		// We have a test for v1beta1 above.
-		clientauthenticationv1beta1.SchemeGroupVersion.Version,
-		// We have a test for v1 above.
-		clientauthenticationv1.SchemeGroupVersion.Version,
-	)
-	for gvk := range scheme.AllKnownTypes() {
-		if gvk.Group == clientauthenticationv1beta1.SchemeGroupVersion.Group &&
-			gvk.Kind == "ExecCredential" {
-			if !versionsThatDontNeedTests.Has(gvk.Version) {
-				t.Errorf(
-					"TODO: add test similar to TestV1beta1ClusterTypesAreSynced for client.authentication.k8s.io/%s",
-					gvk.Version,
-				)
-			}
-		}
-	}
-}
+//func TestAllClusterTypesAreSynced(t *testing.T) {
+//	versionsThatDontNeedTests := sets.NewString(
+//		// The internal Cluster type should only be used...internally...and therefore doesn't
+//		// necessarily need to be synced with clientcmdv1.
+//		runtime.APIVersionInternal,
+//		// We have a test for v1beta1 above.
+//		//clientauthenticationv1beta1.SchemeGroupVersion.Version,
+//		// We have a test for v1 above.
+//		//clientauthenticationv1.SchemeGroupVersion.Version,
+//	)
+//	for gvk := range scheme.AllKnownTypes() {
+//		if gvk.Group == clientauthenticationv1beta1.SchemeGroupVersion.Group &&
+//			gvk.Kind == "ExecCredential" {
+//			if !versionsThatDontNeedTests.Has(gvk.Version) {
+//				t.Errorf(
+//					"TODO: add test similar to TestV1beta1ClusterTypesAreSynced for client.authentication.k8s.io/%s",
+//					gvk.Version,
+//				)
+//			}
+//		}
+//	}
+//}

@@ -16,69 +16,70 @@ limitations under the License.
 
 package v1
 
-import (
-	"testing"
-
-	"github.com/google/go-cmp/cmp"
-)
-
-func TestSetDefaults_Config(t *testing.T) {
-	tests := []struct {
-		name        string
-		in, wantOut *ExecConfig
-	}{
-		{
-			name: "alpha exec API with empty interactive mode",
-			in:   &ExecConfig{APIVersion: "client.authentication.k8s.io/v1alpha1"},
-			wantOut: &ExecConfig{
-				APIVersion:      "client.authentication.k8s.io/v1alpha1",
-				InteractiveMode: IfAvailableExecInteractiveMode,
-			},
-		},
-		{
-			name: "beta exec API with empty interactive mode",
-			in:   &ExecConfig{APIVersion: "client.authentication.k8s.io/v1beta1"},
-			wantOut: &ExecConfig{
-				APIVersion:      "client.authentication.k8s.io/v1beta1",
-				InteractiveMode: IfAvailableExecInteractiveMode,
-			},
-		},
-		{
-			name: "alpha exec API with set interactive mode",
-			in: &ExecConfig{
-				APIVersion:      "client.authentication.k8s.io/v1alpha1",
-				InteractiveMode: NeverExecInteractiveMode,
-			},
-			wantOut: &ExecConfig{
-				APIVersion:      "client.authentication.k8s.io/v1alpha1",
-				InteractiveMode: NeverExecInteractiveMode,
-			},
-		},
-		{
-			name: "beta exec API with set interactive mode",
-			in: &ExecConfig{
-				APIVersion:      "client.authentication.k8s.io/v1beta1",
-				InteractiveMode: NeverExecInteractiveMode,
-			},
-			wantOut: &ExecConfig{
-				APIVersion:      "client.authentication.k8s.io/v1beta1",
-				InteractiveMode: NeverExecInteractiveMode,
-			},
-		},
-		{
-			name:    "v1 exec API with empty interactive mode",
-			in:      &ExecConfig{APIVersion: "client.authentication.k8s.io/v1"},
-			wantOut: &ExecConfig{APIVersion: "client.authentication.k8s.io/v1"},
-		},
-	}
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			gotOut := test.in.DeepCopy()
-			SetDefaults_ExecConfig(gotOut)
-			if diff := cmp.Diff(test.wantOut, gotOut); diff != "" {
-				t.Errorf("unexpected defaulting; -want, +got:\n %s", diff)
-			}
-		})
-	}
-}
+//
+//import (
+//	"testing"
+//
+//	"github.com/google/go-cmp/cmp"
+//)
+//
+//func TestSetDefaults_Config(t *testing.T) {
+//	tests := []struct {
+//		name        string
+//		in, wantOut *ExecConfig
+//	}{
+//		{
+//			name: "alpha exec API with empty interactive mode",
+//			in:   &ExecConfig{APIVersion: "client.authentication.k8s.io/v1alpha1"},
+//			wantOut: &ExecConfig{
+//				APIVersion:      "client.authentication.k8s.io/v1alpha1",
+//				InteractiveMode: IfAvailableExecInteractiveMode,
+//			},
+//		},
+//		{
+//			name: "beta exec API with empty interactive mode",
+//			in:   &ExecConfig{APIVersion: "client.authentication.k8s.io/v1beta1"},
+//			wantOut: &ExecConfig{
+//				APIVersion:      "client.authentication.k8s.io/v1beta1",
+//				InteractiveMode: IfAvailableExecInteractiveMode,
+//			},
+//		},
+//		{
+//			name: "alpha exec API with set interactive mode",
+//			in: &ExecConfig{
+//				APIVersion:      "client.authentication.k8s.io/v1alpha1",
+//				InteractiveMode: NeverExecInteractiveMode,
+//			},
+//			wantOut: &ExecConfig{
+//				APIVersion:      "client.authentication.k8s.io/v1alpha1",
+//				InteractiveMode: NeverExecInteractiveMode,
+//			},
+//		},
+//		{
+//			name: "beta exec API with set interactive mode",
+//			in: &ExecConfig{
+//				APIVersion:      "client.authentication.k8s.io/v1beta1",
+//				InteractiveMode: NeverExecInteractiveMode,
+//			},
+//			wantOut: &ExecConfig{
+//				APIVersion:      "client.authentication.k8s.io/v1beta1",
+//				InteractiveMode: NeverExecInteractiveMode,
+//			},
+//		},
+//		{
+//			name:    "v1 exec API with empty interactive mode",
+//			in:      &ExecConfig{APIVersion: "client.authentication.k8s.io/v1"},
+//			wantOut: &ExecConfig{APIVersion: "client.authentication.k8s.io/v1"},
+//		},
+//	}
+//	for _, test := range tests {
+//		test := test
+//		t.Run(test.name, func(t *testing.T) {
+//			gotOut := test.in.DeepCopy()
+//			SetDefaults_ExecConfig(gotOut)
+//			if diff := cmp.Diff(test.wantOut, gotOut); diff != "" {
+//				t.Errorf("unexpected defaulting; -want, +got:\n %s", diff)
+//			}
+//		})
+//	}
+//}

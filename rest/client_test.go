@@ -28,15 +28,13 @@ import (
 	"testing"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/diff"
-	"k8s.io/client-go/kubernetes/scheme"
-	utiltesting "k8s.io/client-go/util/testing"
+	"github.com/stretchr/testify/require"
+	utiltesting "github.com/yubo/client-go/util/testing"
+	"github.com/yubo/golib/api"
+	metav1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -53,21 +51,20 @@ type TestParam struct {
 
 // TestSerializer makes sure that you're always able to decode metav1.Status
 func TestSerializer(t *testing.T) {
-	gv := v1beta1.SchemeGroupVersion
 	contentConfig := ContentConfig{
 		ContentType:          "application/json",
-		GroupVersion:         &gv,
 		NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 	}
 
-	n := runtime.NewClientNegotiator(contentConfig.NegotiatedSerializer, gv)
+	n := runtime.NewClientNegotiator(contentConfig.NegotiatedSerializer)
 	d, err := n.Decoder("application/json", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// bytes based on actual return from API server when encoding an "unversioned" object
-	obj, err := runtime.Decode(d, []byte(`{"kind":"Status","apiVersion":"v1","metadata":{},"status":"Success"}`))
+	obj := new(api.Status)
+	_, err = runtime.Decode(d, []byte(`{"kind":"Status","apiVersion":"v1","metadata":{},"status":"Success"}`), obj)
 	t.Log(obj)
 	if err != nil {
 		t.Fatal(err)
@@ -97,7 +94,7 @@ func TestDoRequestFailed(t *testing.T) {
 		Message: " \"\" not found",
 		Details: &metav1.StatusDetails{},
 	}
-	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
+	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(), status)
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   404,
 		ResponseBody: string(expectedBody),
@@ -119,9 +116,7 @@ func TestDoRequestFailed(t *testing.T) {
 		t.Errorf("unexpected error type %v", err)
 	}
 	actual := ss.Status()
-	if !reflect.DeepEqual(status, &actual) {
-		t.Errorf("Unexpected mis-match: %s", diff.ObjectReflectDiff(status, &actual))
-	}
+	require.Equal(t, status, &actual)
 }
 
 func TestDoRawRequestFailed(t *testing.T) {
@@ -136,7 +131,7 @@ func TestDoRawRequestFailed(t *testing.T) {
 			},
 		},
 	}
-	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
+	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(), status)
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   404,
 		ResponseBody: string(expectedBody),
@@ -159,9 +154,7 @@ func TestDoRawRequestFailed(t *testing.T) {
 		t.Errorf("unexpected error type %v", err)
 	}
 	actual := ss.Status()
-	if !reflect.DeepEqual(status, &actual) {
-		t.Errorf("Unexpected mis-match: %s", diff.ObjectReflectDiff(status, &actual))
-	}
+	require.Equal(t, status, &actual)
 }
 
 func TestDoRequestCreated(t *testing.T) {
@@ -235,7 +228,8 @@ func validate(testParam TestParam, t *testing.T, body []byte, fakeHandler *utilt
 			t.Errorf("Expected object not to be created")
 		}
 	}
-	statusOut, err := runtime.Decode(scheme.Codecs.UniversalDeserializer(), body)
+
+	statusOut, err := runtime.Decode(scheme.Codecs.UniversalDeserializer(), body, new(api.Status))
 	if testParam.testBody {
 		if testParam.testBodyErrorIsNotNil && err == nil {
 			t.Errorf("Expected Error")
@@ -250,7 +244,7 @@ func validate(testParam TestParam, t *testing.T, body []byte, fakeHandler *utilt
 			t.Errorf("Unexpected mis-match. Expected %#v.  Saw %#v", testParam.expStatus, statusOut)
 		}
 	}
-	fakeHandler.ValidateRequest(t, "/"+v1.SchemeGroupVersion.String()+"/test", "GET", nil)
+	fakeHandler.ValidateRequest(t, "/test", "GET", nil)
 
 }
 
@@ -279,7 +273,7 @@ func TestHTTPMethods(t *testing.T) {
 		t.Errorf("Delete : Object returned should not be nil")
 	}
 
-	request = c.Patch(types.JSONPatchType)
+	request = c.Patch(api.JSONPatchType)
 	if request == nil {
 		t.Errorf("Patch : Object returned should not be nil")
 	}
@@ -311,7 +305,6 @@ func TestHTTPProxy(t *testing.T) {
 	c, err := RESTClientFor(&Config{
 		Host: testServer.URL,
 		ContentConfig: ContentConfig{
-			GroupVersion:         &v1.SchemeGroupVersion,
 			NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 		},
 		Proxy:    http.ProxyURL(u),
@@ -374,7 +367,7 @@ func TestCreateBackoffManager(t *testing.T) {
 
 func testServerEnv(t *testing.T, statusCode int) (*httptest.Server, *utiltesting.FakeHandler, *metav1.Status) {
 	status := &metav1.Status{TypeMeta: metav1.TypeMeta{APIVersion: "v1", Kind: "Status"}, Status: fmt.Sprintf("%s", metav1.StatusSuccess)}
-	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(v1.SchemeGroupVersion), status)
+	expectedBody, _ := runtime.Encode(scheme.Codecs.LegacyCodec(), status)
 	fakeHandler := utiltesting.FakeHandler{
 		StatusCode:   statusCode,
 		ResponseBody: string(expectedBody),
@@ -388,7 +381,6 @@ func restClient(testServer *httptest.Server) (*RESTClient, error) {
 	c, err := RESTClientFor(&Config{
 		Host: testServer.URL,
 		ContentConfig: ContentConfig{
-			GroupVersion:         &v1.SchemeGroupVersion,
 			NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 		},
 		Username: "user",

@@ -23,7 +23,7 @@ import (
 	"sync"
 	"testing"
 
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
 )
 
 // TestTransportForThreadSafe is meant to be run with the race detector

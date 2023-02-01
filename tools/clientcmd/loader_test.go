@@ -26,12 +26,12 @@ import (
 	"strings"
 	"testing"
 
-	"sigs.k8s.io/yaml"
+	"github.com/yubo/golib/util/yaml"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/diff"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
+	clientcmdlatest "github.com/yubo/client-go/tools/clientcmd/api/latest"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/util/diff"
 )
 
 var (
@@ -99,7 +99,7 @@ users:
     auth-provider:
       name: gcp`
 
-	_, _, err := clientcmdlatest.Codec.Decode([]byte(fakeKubeconfigData), nil, nil)
+	_, err := clientcmdlatest.Codec.Decode([]byte(fakeKubeconfigData), new(clientcmdapi.Config))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

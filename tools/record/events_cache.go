@@ -17,7 +17,6 @@ limitations under the License.
 package record
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -25,12 +24,11 @@ import (
 
 	"github.com/golang/groupcache/lru"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
-	"k8s.io/client-go/util/flowcontrol"
-	"k8s.io/utils/clock"
+	v1 "github.com/yubo/golib/api"
+	"github.com/yubo/client-go/util/flowcontrol"
+	metav1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/util/clock"
+	"github.com/yubo/golib/util/sets"
 )
 
 const (
@@ -346,14 +344,14 @@ func (e *eventLogger) eventObserve(newEvent *v1.Event, key string) (*v1.Event, [
 		event.FirstTimestamp = lastObservation.firstTimestamp
 		event.Count = int32(lastObservation.count) + 1
 
-		eventCopy2 := *event
-		eventCopy2.Count = 0
-		eventCopy2.LastTimestamp = metav1.NewTime(time.Unix(0, 0))
-		eventCopy2.Message = ""
+		//eventCopy2 := *event
+		//eventCopy2.Count = 0
+		//eventCopy2.LastTimestamp = metav1.NewTime(time.Unix(0, 0))
+		//eventCopy2.Message = ""
 
-		newData, _ := json.Marshal(event)
-		oldData, _ := json.Marshal(eventCopy2)
-		patch, err = strategicpatch.CreateTwoWayMergePatch(oldData, newData, event)
+		//newData, _ := json.Marshal(event)
+		//oldData, _ := json.Marshal(eventCopy2)
+		//patch, err = strategicpatch.CreateTwoWayMergePatch(oldData, newData, event)
 	}
 
 	// record our new observation

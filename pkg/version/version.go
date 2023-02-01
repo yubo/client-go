@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"runtime"
 
-	apimachineryversion "k8s.io/apimachinery/pkg/version"
+	apimachineryversion "github.com/yubo/golib/version"
 )
 
 // Get returns the overall codebase version. It's for detecting

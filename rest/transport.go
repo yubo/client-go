@@ -21,9 +21,9 @@ import (
 	"errors"
 	"net/http"
 
-	"k8s.io/client-go/pkg/apis/clientauthentication"
-	"k8s.io/client-go/plugin/pkg/client/auth/exec"
-	"k8s.io/client-go/transport"
+	"github.com/yubo/client-go/pkg/apis/clientauthentication"
+	"github.com/yubo/client-go/plugin/pkg/client/auth/exec"
+	"github.com/yubo/client-go/transport"
 )
 
 // HTTPClientFor returns an http.Client that will provide the authentication

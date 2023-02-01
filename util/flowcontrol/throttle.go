@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"golang.org/x/time/rate"
-	"k8s.io/utils/clock"
+	"github.com/yubo/golib/util/clock"
 )
 
 type PassiveRateLimiter interface {

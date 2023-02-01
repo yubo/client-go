@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"net/url"
 
-	clientauthenticationapi "k8s.io/client-go/pkg/apis/clientauthentication"
+	clientauthenticationapi "github.com/yubo/client-go/pkg/apis/clientauthentication"
 )
 
 // This file contains Config logic related to exec credential plugins.

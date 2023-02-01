@@ -18,11 +18,12 @@ package versioned
 
 import (
 	"fmt"
+	"reflect"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/streaming"
-	"k8s.io/apimachinery/pkg/watch"
+	metav1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/golib/watch"
 )
 
 // Decoder implements the watch.Decoder interface for io.ReadClosers that
@@ -30,15 +31,20 @@ import (
 // with the given streaming decoder. The internal objects will be then
 // decoded by the embedded decoder.
 type Decoder struct {
+	objFactory      func() interface{}
 	decoder         streaming.Decoder
 	embeddedDecoder runtime.Decoder
 }
 
 // NewDecoder creates an Decoder for the given writer and codec.
-func NewDecoder(decoder streaming.Decoder, embeddedDecoder runtime.Decoder) *Decoder {
+func NewDecoder(obj interface{}, decoder streaming.Decoder, embeddedDecoder runtime.Decoder) *Decoder {
+	rt := reflect.Indirect(reflect.ValueOf(obj)).Type()
 	return &Decoder{
 		decoder:         decoder,
 		embeddedDecoder: embeddedDecoder,
+		objFactory: func() interface{} {
+			return reflect.New(rt).Interface()
+		},
 	}
 }
 
@@ -46,7 +52,7 @@ func NewDecoder(decoder streaming.Decoder, embeddedDecoder runtime.Decoder) *Dec
 // if the reader is closed or an object can't be decoded.
 func (d *Decoder) Decode() (watch.EventType, runtime.Object, error) {
 	var got metav1.WatchEvent
-	res, _, err := d.decoder.Decode(nil, &got)
+	res, err := d.decoder.Decode(&got)
 	if err != nil {
 		return "", nil, err
 	}
@@ -59,7 +65,8 @@ func (d *Decoder) Decode() (watch.EventType, runtime.Object, error) {
 		return "", nil, fmt.Errorf("got invalid watch event type: %v", got.Type)
 	}
 
-	obj, err := runtime.Decode(d.embeddedDecoder, got.Object.Raw)
+	obj := d.objFactory()
+	_, err = runtime.Decode(d.embeddedDecoder, got.Object.Raw, obj)
 	if err != nil {
 		return "", nil, fmt.Errorf("unable to decode watch event: %v", err)
 	}

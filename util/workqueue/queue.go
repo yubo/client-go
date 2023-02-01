@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/utils/clock"
+	"github.com/yubo/golib/util/clock"
 )
 
 type Interface interface {

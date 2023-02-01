@@ -27,10 +27,10 @@ import (
 	"strings"
 	"sync"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	"k8s.io/apimachinery/pkg/util/runtime"
-	netutils "k8s.io/utils/net"
+	v1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/stream/httpstream"
+	"github.com/yubo/golib/util/runtime"
+	netutils "github.com/yubo/golib/util/net"
 )
 
 // PortForwardProtocolV1Name is the subprotocol used for port forwarding.

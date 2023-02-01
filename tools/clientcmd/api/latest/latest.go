@@ -17,19 +17,15 @@ limitations under the License.
 package latest
 
 import (
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer/json"
-	"k8s.io/apimachinery/pkg/runtime/serializer/versioning"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/client-go/tools/clientcmd/api/v1"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/json"
+	"github.com/yubo/golib/runtime/serializer/versioning"
 )
 
 // Version is the string that represents the current external default version.
 const Version = "v1"
 
-var ExternalVersion = schema.GroupVersion{Group: "", Version: "v1"}
+//var ExternalVersion = schema.GroupVersion{Group: "", Version: "v1"}
 
 // OldestVersion is the string that represents the oldest server version supported,
 // for client code that wants to hardcode the lowest common denominator.
@@ -42,20 +38,15 @@ const OldestVersion = "v1"
 var Versions = []string{"v1"}
 
 var (
-	Codec  runtime.Codec
-	Scheme *runtime.Scheme
+	Codec runtime.Codec
 )
 
 func init() {
-	Scheme = runtime.NewScheme()
-	utilruntime.Must(api.AddToScheme(Scheme))
-	utilruntime.Must(v1.AddToScheme(Scheme))
-	yamlSerializer := json.NewYAMLSerializer(json.DefaultMetaFactory, Scheme, Scheme)
+	yamlSerializer := json.NewYAMLSerializer()
 	Codec = versioning.NewDefaultingCodecForScheme(
-		Scheme,
 		yamlSerializer,
 		yamlSerializer,
-		schema.GroupVersion{Version: Version},
-		runtime.InternalGroupVersioner,
+		//schema.GroupVersion{Version: Version},
+		//runtime.InternalGroupVersioner,
 	)
 }

@@ -24,6 +24,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"path"
@@ -35,18 +36,17 @@ import (
 
 	"golang.org/x/net/http2"
 
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer/streaming"
-	"k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/apimachinery/pkg/watch"
-	restclientwatch "k8s.io/client-go/rest/watch"
-	"k8s.io/client-go/tools/metrics"
-	"k8s.io/client-go/util/flowcontrol"
+	restclientwatch "github.com/yubo/client-go/rest/watch"
+	"github.com/yubo/client-go/tools/metrics"
+	"github.com/yubo/client-go/util/flowcontrol"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/golib/util/clock"
+	"github.com/yubo/golib/util/net"
+	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/clock"
 )
 
 var (
@@ -101,6 +101,7 @@ type Request struct {
 	backoff     BackoffManager
 	timeout     time.Duration
 	maxRetries  int
+	debug       bool
 
 	// generic components accessible via method setters
 	verb       string
@@ -366,14 +367,14 @@ func (r *Request) Param(paramName, s string) *Request {
 // VersionedParams will not write query parameters that have omitempty set and are empty. If a
 // parameter has already been set it is appended to (Params and VersionedParams are additive).
 func (r *Request) VersionedParams(obj runtime.Object, codec runtime.ParameterCodec) *Request {
-	return r.SpecificallyVersionedParams(obj, codec, r.c.content.GroupVersion)
+	return r.SpecificallyVersionedParams(obj, codec)
 }
 
-func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec runtime.ParameterCodec, version schema.GroupVersion) *Request {
+func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec runtime.ParameterCodec) *Request {
 	if r.err != nil {
 		return r
 	}
-	params, err := codec.EncodeParameters(obj, version)
+	params, err := codec.EncodeParameters(obj)
 	if err != nil {
 		r.err = err
 		return r
@@ -693,7 +694,7 @@ func (b *throttledLogger) Infof(message string, args ...interface{}) {
 
 // Watch attempts to begin watching the requested location.
 // Returns a watch.Interface, or an error.
-func (r *Request) Watch(ctx context.Context) (watch.Interface, error) {
+func (r *Request) Watch(ctx context.Context, obj interface{}) (watch.Interface, error) {
 	// We specifically don't want to rate limit watches, so we
 	// don't use r.rateLimiter here.
 	if r.err != nil {
@@ -729,7 +730,7 @@ func (r *Request) Watch(ctx context.Context) (watch.Interface, error) {
 		updateURLMetrics(ctx, r, resp, err)
 		retry.After(ctx, r, resp, err)
 		if err == nil && resp.StatusCode == http.StatusOK {
-			return r.newStreamWatcher(resp)
+			return r.newStreamWatcher(resp, obj)
 		}
 
 		done, transformErr := func() (bool, error) {
@@ -762,7 +763,7 @@ func (r *Request) Watch(ctx context.Context) (watch.Interface, error) {
 	}
 }
 
-func (r *Request) newStreamWatcher(resp *http.Response) (watch.Interface, error) {
+func (r *Request) newStreamWatcher(resp *http.Response, obj interface{}) (watch.Interface, error) {
 	contentType := resp.Header.Get("Content-Type")
 	mediaType, params, err := mime.ParseMediaType(contentType)
 	if err != nil {
@@ -779,7 +780,7 @@ func (r *Request) newStreamWatcher(resp *http.Response) (watch.Interface, error)
 	watchEventDecoder := streaming.NewDecoder(frameReader, streamingSerializer)
 
 	return watch.NewStreamWatcher(
-		restclientwatch.NewDecoder(watchEventDecoder, objectDecoder),
+		restclientwatch.NewDecoder(obj, watchEventDecoder, objectDecoder),
 		// use 500 to indicate that the cause of the error is unknown - other error codes
 		// are more specific to HTTP interactions, and set a reason
 		errors.NewClientErrorReporter(http.StatusInternalServerError, r.verb, "ClientWatchDecoding"),
@@ -978,7 +979,23 @@ func (r *Request) request(ctx context.Context, fn func(*http.Request, *http.Resp
 		if err != nil {
 			return err
 		}
+
+		if r.debug {
+			dump, err := httputil.DumpRequestOut(req, true)
+			if err != nil {
+				return err
+			}
+			klog.V(3).InfoS("client.Do", "request", string(dump))
+		}
+
 		resp, err := client.Do(req)
+
+		if r.debug && resp != nil {
+			if dump, err := httputil.DumpResponse(resp, true); err == nil {
+				klog.V(3).InfoS("client.Do", "response", string(dump))
+			}
+		}
+
 		updateURLMetrics(ctx, r, resp, err)
 		// The value -1 or a value of 0 with a non-nil Body indicates that the length is unknown.
 		// https://pkg.go.dev/net/http#Request
@@ -1215,15 +1232,15 @@ func (r *Request) newUnstructuredResponseError(body []byte, isTextResponse bool,
 	if isTextResponse {
 		message = strings.TrimSpace(string(body))
 	}
-	var groupResource schema.GroupResource
-	if len(r.resource) > 0 {
-		groupResource.Group = r.c.content.GroupVersion.Group
-		groupResource.Resource = r.resource
-	}
+	//var groupResource schema.GroupResource
+	//if len(r.resource) > 0 {
+	//	groupResource.Group = r.c.content.GroupVersion.Group
+	//	groupResource.Resource = r.resource
+	//}
 	return errors.NewGenericServerResponse(
 		statusCode,
 		method,
-		groupResource,
+		//groupResource,
 		r.resourceName,
 		message,
 		retryAfter,
@@ -1284,14 +1301,14 @@ func (r Result) Get() (runtime.Object, error) {
 	}
 
 	// decode, but if the result is Status return that as an error instead.
-	out, _, err := r.decoder.Decode(r.body, nil, nil)
+	out, err := r.decoder.Decode(r.body, nil)
 	if err != nil {
 		return nil, err
 	}
 	switch t := out.(type) {
-	case *metav1.Status:
+	case *api.Status:
 		// any status besides StatusSuccess is considered an error.
-		if t.Status != metav1.StatusSuccess {
+		if t.Status != api.StatusSuccess {
 			return nil, errors.FromObject(t)
 		}
 	}
@@ -1329,16 +1346,16 @@ func (r Result) Into(obj runtime.Object) error {
 			r.statusCode, r.contentType)
 	}
 
-	out, _, err := r.decoder.Decode(r.body, nil, obj)
+	out, err := r.decoder.Decode(r.body, obj)
 	if err != nil || out == obj {
 		return err
 	}
 	// if a different object is returned, see if it is Status and avoid double decoding
 	// the object.
 	switch t := out.(type) {
-	case *metav1.Status:
+	case *api.Status:
 		// any status besides StatusSuccess is considered an error.
-		if t.Status != metav1.StatusSuccess {
+		if t.Status != api.StatusSuccess {
 			return errors.FromObject(t)
 		}
 	}
@@ -1365,17 +1382,15 @@ func (r Result) Error() error {
 
 	// attempt to convert the body into a Status object
 	// to be backwards compatible with old servers that do not return a version, default to "v1"
-	out, _, err := r.decoder.Decode(r.body, &schema.GroupVersionKind{Version: "v1"}, nil)
+	out := &api.Status{}
+	_, err := r.decoder.Decode(r.body, out)
 	if err != nil {
 		klog.V(5).Infof("body was not decodable (unable to check for Status): %v", err)
 		return r.err
 	}
-	switch t := out.(type) {
-	case *metav1.Status:
-		// because we default the kind, we *must* check for StatusFailure
-		if t.Status == metav1.StatusFailure {
-			return errors.FromObject(t)
-		}
+	// because we default the kind, we *must* check for StatusFailure
+	if out.Status == api.StatusFailure {
+		return errors.FromObject(out)
 	}
 	return r.err
 }

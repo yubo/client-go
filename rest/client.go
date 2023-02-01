@@ -24,10 +24,9 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/flowcontrol"
+	"github.com/yubo/client-go/util/flowcontrol"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
 )
 
 const (
@@ -43,10 +42,10 @@ type Interface interface {
 	Verb(verb string) *Request
 	Post() *Request
 	Put() *Request
-	Patch(pt types.PatchType) *Request
+	Patch(pt api.PatchType) *Request
 	Get() *Request
 	Delete() *Request
-	APIVersion() schema.GroupVersion
+	//APIVersion() schema.GroupVersion
 }
 
 // ClientContentConfig controls how RESTClient communicates with the server.
@@ -65,7 +64,7 @@ type ClientContentConfig struct {
 	// GroupVersion is the API version to talk to. Must be provided when initializing
 	// a RESTClient directly. When initializing a Client, will be set with the default
 	// code version. This is used as the default group version for VersionedParams.
-	GroupVersion schema.GroupVersion
+	//GroupVersion schema.GroupVersion
 	// Negotiator is used for obtaining encoders and decoders for multiple
 	// supported media types.
 	Negotiator runtime.ClientNegotiator
@@ -171,6 +170,11 @@ func (c *RESTClient) Verb(verb string) *Request {
 	return NewRequest(c).Verb(verb)
 }
 
+func (r *Request) Debug() *Request {
+	r.debug = true
+	return r
+}
+
 // Post begins a POST request. Short for c.Verb("POST").
 func (c *RESTClient) Post() *Request {
 	return c.Verb("POST")
@@ -182,7 +186,7 @@ func (c *RESTClient) Put() *Request {
 }
 
 // Patch begins a PATCH request. Short for c.Verb("Patch").
-func (c *RESTClient) Patch(pt types.PatchType) *Request {
+func (c *RESTClient) Patch(pt api.PatchType) *Request {
 	return c.Verb("PATCH").SetHeader("Content-Type", string(pt))
 }
 
@@ -197,6 +201,6 @@ func (c *RESTClient) Delete() *Request {
 }
 
 // APIVersion returns the APIVersion this RESTClient is expected to use.
-func (c *RESTClient) APIVersion() schema.GroupVersion {
-	return c.content.GroupVersion
-}
+//func (c *RESTClient) APIVersion() schema.GroupVersion {
+//	return c.content.GroupVersion
+//}

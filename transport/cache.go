@@ -25,8 +25,8 @@ import (
 	"sync"
 	"time"
 
-	utilnet "k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/apimachinery/pkg/util/wait"
+	utilnet "github.com/yubo/golib/util/net"
+	"github.com/yubo/golib/util/wait"
 )
 
 // TlsTransportCache caches TLS http.RoundTrippers different configurations. The

@@ -17,11 +17,7 @@ limitations under the License.
 package reference
 
 import (
-	"testing"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	metav1 "github.com/yubo/golib/api"
 )
 
 type TestRuntimeObj struct {
@@ -29,46 +25,46 @@ type TestRuntimeObj struct {
 	metav1.ObjectMeta
 }
 
-func (o *TestRuntimeObj) DeepCopyObject() runtime.Object {
-	panic("die")
-}
+//func (o *TestRuntimeObj) DeepCopyObject() runtime.Object {
+//	panic("die")
+//}
 
-func TestGetReferenceRefVersion(t *testing.T) {
-	tests := []struct {
-		name               string
-		input              *TestRuntimeObj
-		groupVersion       schema.GroupVersion
-		expectedRefVersion string
-	}{
-		{
-			name: "v1 GV from scheme",
-			input: &TestRuntimeObj{
-				ObjectMeta: metav1.ObjectMeta{},
-			},
-			groupVersion:       schema.GroupVersion{Group: "", Version: "v1"},
-			expectedRefVersion: "v1",
-		},
-		{
-			name: "foo.group/v3 GV from scheme",
-			input: &TestRuntimeObj{
-				ObjectMeta: metav1.ObjectMeta{},
-			},
-			groupVersion:       schema.GroupVersion{Group: "foo.group", Version: "v3"},
-			expectedRefVersion: "foo.group/v3",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			scheme := runtime.NewScheme()
-			scheme.AddKnownTypes(test.groupVersion, &TestRuntimeObj{})
-			ref, err := GetReference(scheme, test.input)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if test.expectedRefVersion != ref.APIVersion {
-				t.Errorf("expected %q, got %q", test.expectedRefVersion, ref.APIVersion)
-			}
-		})
-	}
-}
+//func TestGetReferenceRefVersion(t *testing.T) {
+//	tests := []struct {
+//		name               string
+//		input              *TestRuntimeObj
+//		groupVersion       schema.GroupVersion
+//		expectedRefVersion string
+//	}{
+//		{
+//			name: "v1 GV from scheme",
+//			input: &TestRuntimeObj{
+//				ObjectMeta: metav1.ObjectMeta{},
+//			},
+//			groupVersion:       schema.GroupVersion{Group: "", Version: "v1"},
+//			expectedRefVersion: "v1",
+//		},
+//		{
+//			name: "foo.group/v3 GV from scheme",
+//			input: &TestRuntimeObj{
+//				ObjectMeta: metav1.ObjectMeta{},
+//			},
+//			groupVersion:       schema.GroupVersion{Group: "foo.group", Version: "v3"},
+//			expectedRefVersion: "foo.group/v3",
+//		},
+//	}
+//
+//	for _, test := range tests {
+//		t.Run(test.name, func(t *testing.T) {
+//			scheme := runtime.NewScheme()
+//			scheme.AddKnownTypes(test.groupVersion, &TestRuntimeObj{})
+//			ref, err := GetReference(scheme, test.input)
+//			if err != nil {
+//				t.Fatal(err)
+//			}
+//			if test.expectedRefVersion != ref.APIVersion {
+//				t.Errorf("expected %q, got %q", test.expectedRefVersion, ref.APIVersion)
+//			}
+//		})
+//	}
+//}

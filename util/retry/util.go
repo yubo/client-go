@@ -17,17 +17,16 @@ limitations under the License.
 package retry
 
 import (
-	"time"
-
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/util/wait"
 )
 
 // DefaultRetry is the recommended retry for a conflict where multiple clients
 // are making changes to the same resource.
 var DefaultRetry = wait.Backoff{
 	Steps:    5,
-	Duration: 10 * time.Millisecond,
+	Duration: api.NewDuration("10ms"),
 	Factor:   1.0,
 	Jitter:   0.1,
 }
@@ -37,7 +36,7 @@ var DefaultRetry = wait.Backoff{
 // active management by one or more controllers.
 var DefaultBackoff = wait.Backoff{
 	Steps:    4,
-	Duration: 10 * time.Millisecond,
+	Duration: api.NewDuration("10ms"),
 	Factor:   5.0,
 	Jitter:   0.1,
 }

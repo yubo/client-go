@@ -24,11 +24,11 @@ import (
 	"sync"
 	"time"
 
-	utilnet "k8s.io/apimachinery/pkg/util/net"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/util/connrotation"
-	"k8s.io/client-go/util/workqueue"
+	utilnet "github.com/yubo/golib/util/net"
+	utilruntime "github.com/yubo/golib/util/runtime"
+	"github.com/yubo/golib/util/wait"
+	"github.com/yubo/client-go/util/connrotation"
+	"github.com/yubo/client-go/util/workqueue"
 	"k8s.io/klog/v2"
 )
 

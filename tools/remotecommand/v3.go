@@ -22,8 +22,8 @@ import (
 	"net/http"
 	"sync"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/runtime"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/util/runtime"
 )
 
 // streamProtocolV3 implements version 3 of the streaming protocol for attach
@@ -51,7 +51,7 @@ func (p *streamProtocolV3) createStreams(conn streamCreator) error {
 	// set up resize stream
 	if p.Tty {
 		headers := http.Header{}
-		headers.Set(v1.StreamType, v1.StreamTypeResize)
+		headers.Set(api.StreamType, api.StreamTypeResize)
 		var err error
 		p.resizeStream, err = conn.CreateStream(headers)
 		if err != nil {

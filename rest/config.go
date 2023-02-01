@@ -29,14 +29,12 @@ import (
 	"strings"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/pkg/version"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/client-go/transport"
-	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/client-go/util/flowcontrol"
+	"github.com/yubo/client-go/pkg/version"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
+	"github.com/yubo/client-go/transport"
+	certutil "github.com/yubo/client-go/util/cert"
+	"github.com/yubo/client-go/util/flowcontrol"
+	"github.com/yubo/golib/runtime"
 	"k8s.io/klog/v2"
 )
 
@@ -291,7 +289,7 @@ type ContentConfig struct {
 	// GroupVersion is the API version to talk to. Must be provided when initializing
 	// a RESTClient directly. When initializing a Client, will be set with the default
 	// code version.
-	GroupVersion *schema.GroupVersion
+	//GroupVersion *schema.GroupVersion
 	// NegotiatedSerializer is used for obtaining encoders and decoders for multiple
 	// supported media types.
 	//
@@ -307,9 +305,9 @@ type ContentConfig struct {
 // RESTClientFor is equivalent to calling RESTClientForConfigAndClient(config, httpClient),
 // where httpClient was generated with HTTPClientFor(config).
 func RESTClientFor(config *Config) (*RESTClient, error) {
-	if config.GroupVersion == nil {
-		return nil, fmt.Errorf("GroupVersion is required when initializing a RESTClient")
-	}
+	//if config.GroupVersion == nil {
+	//	return nil, fmt.Errorf("GroupVersion is required when initializing a RESTClient")
+	//}
 	if config.NegotiatedSerializer == nil {
 		return nil, fmt.Errorf("NegotiatedSerializer is required when initializing a RESTClient")
 	}
@@ -336,9 +334,9 @@ func RESTClientFor(config *Config) (*RESTClient, error) {
 // Note that the http client takes precedence over the transport values configured.
 // The http client defaults to the `http.DefaultClient` if nil.
 func RESTClientForConfigAndClient(config *Config, httpClient *http.Client) (*RESTClient, error) {
-	if config.GroupVersion == nil {
-		return nil, fmt.Errorf("GroupVersion is required when initializing a RESTClient")
-	}
+	//if config.GroupVersion == nil {
+	//	return nil, fmt.Errorf("GroupVersion is required when initializing a RESTClient")
+	//}
 	if config.NegotiatedSerializer == nil {
 		return nil, fmt.Errorf("NegotiatedSerializer is required when initializing a RESTClient")
 	}
@@ -363,15 +361,15 @@ func RESTClientForConfigAndClient(config *Config, httpClient *http.Client) (*RES
 		}
 	}
 
-	var gv schema.GroupVersion
-	if config.GroupVersion != nil {
-		gv = *config.GroupVersion
-	}
+	//var gv schema.GroupVersion
+	//if config.GroupVersion != nil {
+	//	gv = *config.GroupVersion
+	//}
 	clientContent := ClientContentConfig{
 		AcceptContentTypes: config.AcceptContentTypes,
 		ContentType:        config.ContentType,
-		GroupVersion:       gv,
-		Negotiator:         runtime.NewClientNegotiator(config.NegotiatedSerializer, gv),
+		//GroupVersion:       gv,
+		Negotiator: runtime.NewClientNegotiator(config.NegotiatedSerializer),
 	}
 
 	restClient, err := NewRESTClient(baseURL, versionedAPIPath, clientContent, rateLimiter, httpClient)
@@ -430,15 +428,15 @@ func UnversionedRESTClientForConfigAndClient(config *Config, httpClient *http.Cl
 		}
 	}
 
-	gv := metav1.SchemeGroupVersion
-	if config.GroupVersion != nil {
-		gv = *config.GroupVersion
-	}
+	//gv := metav1.SchemeGroupVersion
+	//if config.GroupVersion != nil {
+	//	gv = *config.GroupVersion
+	//}
 	clientContent := ClientContentConfig{
 		AcceptContentTypes: config.AcceptContentTypes,
 		ContentType:        config.ContentType,
-		GroupVersion:       gv,
-		Negotiator:         runtime.NewClientNegotiator(config.NegotiatedSerializer, gv),
+		//GroupVersion:       gv,
+		Negotiator: runtime.NewClientNegotiator(config.NegotiatedSerializer),
 	}
 
 	restClient, err := NewRESTClient(baseURL, versionedAPIPath, clientContent, rateLimiter, httpClient)
@@ -665,7 +663,8 @@ func CopyConfig(config *Config) *Config {
 		Proxy:              config.Proxy,
 	}
 	if config.ExecProvider != nil && config.ExecProvider.Config != nil {
-		c.ExecProvider.Config = config.ExecProvider.Config.DeepCopyObject()
+		//c.ExecProvider.Config = config.ExecProvider.Config.DeepCopyObject()
+		c.ExecProvider.Config = config.ExecProvider.Config
 	}
 	return c
 }

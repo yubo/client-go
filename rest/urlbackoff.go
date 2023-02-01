@@ -20,8 +20,8 @@ import (
 	"net/url"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/client-go/util/flowcontrol"
+	"github.com/yubo/golib/util/sets"
+	"github.com/yubo/client-go/util/flowcontrol"
 	"k8s.io/klog/v2"
 )
 

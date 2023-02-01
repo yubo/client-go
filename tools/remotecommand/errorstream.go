@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io"
 
-	"k8s.io/apimachinery/pkg/util/runtime"
+	"github.com/yubo/golib/util/runtime"
 )
 
 // errorStreamDecoder interprets the data on the error channel and creates a go error object from it.

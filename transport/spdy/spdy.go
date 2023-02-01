@@ -22,9 +22,9 @@ import (
 	"net/url"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/httpstream"
-	"k8s.io/apimachinery/pkg/util/httpstream/spdy"
-	restclient "k8s.io/client-go/rest"
+	"github.com/yubo/golib/stream/httpstream"
+	"github.com/yubo/golib/stream/httpstream/spdy"
+	restclient "github.com/yubo/client-go/rest"
 )
 
 // Upgrader validates a response from the server after a SPDY upgrade.

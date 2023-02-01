@@ -15,23 +15,3 @@ limitations under the License.
 */
 
 package v1
-
-import (
-	"k8s.io/apimachinery/pkg/runtime"
-)
-
-func addDefaultingFuncs(scheme *runtime.Scheme) error {
-	return RegisterDefaults(scheme)
-}
-
-func SetDefaults_ExecConfig(exec *ExecConfig) {
-	if len(exec.InteractiveMode) == 0 {
-		switch exec.APIVersion {
-		case "client.authentication.k8s.io/v1beta1", "client.authentication.k8s.io/v1alpha1":
-			// default to IfAvailableExecInteractiveMode for backwards compatibility
-			exec.InteractiveMode = IfAvailableExecInteractiveMode
-		default:
-			// require other versions to explicitly declare whether they want stdin or not
-		}
-	}
-}

@@ -30,13 +30,11 @@ import (
 	"testing"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes/scheme"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/client-go/transport"
-	"k8s.io/client-go/util/flowcontrol"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
+	"github.com/yubo/client-go/transport"
+	"github.com/yubo/client-go/util/flowcontrol"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
 
 	"github.com/google/go-cmp/cmp"
 	fuzz "github.com/google/gofuzz"
@@ -148,10 +146,10 @@ func TestRESTClientRequires(t *testing.T) {
 	if _, err := RESTClientFor(&Config{Host: "127.0.0.1", ContentConfig: ContentConfig{NegotiatedSerializer: scheme.Codecs}}); err == nil {
 		t.Errorf("unexpected non-error")
 	}
-	if _, err := RESTClientFor(&Config{Host: "127.0.0.1", ContentConfig: ContentConfig{GroupVersion: &v1.SchemeGroupVersion}}); err == nil {
+	if _, err := RESTClientFor(&Config{Host: "127.0.0.1", ContentConfig: ContentConfig{}}); err == nil {
 		t.Errorf("unexpected non-error")
 	}
-	if _, err := RESTClientFor(&Config{Host: "127.0.0.1", ContentConfig: ContentConfig{GroupVersion: &v1.SchemeGroupVersion, NegotiatedSerializer: scheme.Codecs}}); err != nil {
+	if _, err := RESTClientFor(&Config{Host: "127.0.0.1", ContentConfig: ContentConfig{NegotiatedSerializer: scheme.Codecs}}); err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 }
@@ -189,7 +187,7 @@ func TestRESTClientLimiter(t *testing.T) {
 		t.Run("Versioned_"+testCase.Name, func(t *testing.T) {
 			config := testCase.Config
 			config.Host = "127.0.0.1"
-			config.ContentConfig = ContentConfig{GroupVersion: &v1.SchemeGroupVersion, NegotiatedSerializer: scheme.Codecs}
+			config.ContentConfig = ContentConfig{NegotiatedSerializer: scheme.Codecs}
 			client, err := RESTClientFor(&config)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -201,7 +199,7 @@ func TestRESTClientLimiter(t *testing.T) {
 		t.Run("Unversioned_"+testCase.Name, func(t *testing.T) {
 			config := testCase.Config
 			config.Host = "127.0.0.1"
-			config.ContentConfig = ContentConfig{GroupVersion: &v1.SchemeGroupVersion, NegotiatedSerializer: scheme.Codecs}
+			config.ContentConfig = ContentConfig{NegotiatedSerializer: scheme.Codecs}
 			client, err := UnversionedRESTClientFor(&config)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -240,8 +238,8 @@ func (t *fakeLimiter) Accept() {}
 
 type fakeCodec struct{}
 
-func (c *fakeCodec) Decode([]byte, *schema.GroupVersionKind, runtime.Object) (runtime.Object, *schema.GroupVersionKind, error) {
-	return nil, nil, nil
+func (c *fakeCodec) Decode([]byte, runtime.Object) (runtime.Object, error) {
+	return nil, nil
 }
 
 func (c *fakeCodec) Encode(obj runtime.Object, stream io.Writer) error {
@@ -272,11 +270,11 @@ func (n *fakeNegotiatedSerializer) SupportedMediaTypes() []runtime.SerializerInf
 	return nil
 }
 
-func (n *fakeNegotiatedSerializer) EncoderForVersion(serializer runtime.Encoder, gv runtime.GroupVersioner) runtime.Encoder {
+func (n *fakeNegotiatedSerializer) EncoderForVersion(serializer runtime.Encoder) runtime.Encoder {
 	return &fakeCodec{}
 }
 
-func (n *fakeNegotiatedSerializer) DecoderToVersion(serializer runtime.Decoder, gv runtime.GroupVersioner) runtime.Decoder {
+func (n *fakeNegotiatedSerializer) DecoderToVersion(serializer runtime.Decoder) runtime.Decoder {
 	return &fakeCodec{}
 }
 

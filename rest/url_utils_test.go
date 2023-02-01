@@ -19,11 +19,10 @@ package rest
 import (
 	"path"
 	"testing"
-
-	"k8s.io/api/core/v1"
 )
 
 func TestValidatesHostParameter(t *testing.T) {
+	version := "v1"
 	testCases := []struct {
 		Host    string
 		APIPath string
@@ -31,17 +30,17 @@ func TestValidatesHostParameter(t *testing.T) {
 		URL string
 		Err bool
 	}{
-		{"127.0.0.1", "", "http://127.0.0.1/" + v1.SchemeGroupVersion.Version, false},
-		{"127.0.0.1:8080", "", "http://127.0.0.1:8080/" + v1.SchemeGroupVersion.Version, false},
-		{"foo.bar.com", "", "http://foo.bar.com/" + v1.SchemeGroupVersion.Version, false},
-		{"http://host/prefix", "", "http://host/prefix/" + v1.SchemeGroupVersion.Version, false},
-		{"http://host", "", "http://host/" + v1.SchemeGroupVersion.Version, false},
-		{"http://host", "/", "http://host/" + v1.SchemeGroupVersion.Version, false},
-		{"http://host", "/other", "http://host/other/" + v1.SchemeGroupVersion.Version, false},
+		{"127.0.0.1", "", "http://127.0.0.1/" + version, false},
+		{"127.0.0.1:8080", "", "http://127.0.0.1:8080/" + version, false},
+		{"foo.bar.com", "", "http://foo.bar.com/" + version, false},
+		{"http://host/prefix", "", "http://host/prefix/" + version, false},
+		{"http://host", "", "http://host/" + version, false},
+		{"http://host", "/", "http://host/" + version, false},
+		{"http://host", "/other", "http://host/other/" + version, false},
 		{"host/server", "", "", true},
 	}
 	for i, testCase := range testCases {
-		u, versionedAPIPath, err := DefaultServerURL(testCase.Host, testCase.APIPath, v1.SchemeGroupVersion, false)
+		u, versionedAPIPath, err := DefaultServerURL(testCase.Host, testCase.APIPath, false)
 		switch {
 		case err == nil && testCase.Err:
 			t.Errorf("expected error but was nil")

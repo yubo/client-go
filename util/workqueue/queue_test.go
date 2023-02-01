@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/util/workqueue"
+	"github.com/yubo/golib/util/wait"
+	"github.com/yubo/client-go/util/workqueue"
 )
 
 func TestBasic(t *testing.T) {

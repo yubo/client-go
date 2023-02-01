@@ -22,8 +22,8 @@ import (
 
 	"k8s.io/klog/v2"
 
-	restclient "k8s.io/client-go/rest"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	restclient "github.com/yubo/client-go/rest"
+	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
 )
 
 // DeferredLoadingClientConfig is a ClientConfig interface that is backed by a client config loader.

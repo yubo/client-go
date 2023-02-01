@@ -21,12 +21,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	clientauthenticationv1 "k8s.io/client-go/pkg/apis/clientauthentication/v1"
-	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
-	"k8s.io/client-go/rest"
+	clientauthenticationv1 "github.com/yubo/client-go/pkg/apis/clientauthentication/v1"
+	clientauthenticationv1beta1 "github.com/yubo/client-go/pkg/apis/clientauthentication/v1beta1"
+	"github.com/yubo/client-go/rest"
+	metav1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
 )
 
 // restInfo holds the rest.Client fields that we care about for test assertions.
@@ -48,7 +47,7 @@ func TestLoadExecCredential(t *testing.T) {
 	}{
 		{
 			name: "v1 happy path",
-			data: marshal(t, clientauthenticationv1.SchemeGroupVersion, &clientauthenticationv1.ExecCredential{
+			data: marshal(t, &clientauthenticationv1.ExecCredential{
 				Spec: clientauthenticationv1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1.Cluster{
 						Server:                   "https://some-server/some/path",
@@ -64,8 +63,8 @@ func TestLoadExecCredential(t *testing.T) {
 			}),
 			wantExecCredential: &clientauthenticationv1.ExecCredential{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "ExecCredential",
-					APIVersion: clientauthenticationv1.SchemeGroupVersion.String(),
+					Kind: "ExecCredential",
+					//APIVersion: clientauthenticationv1.SchemeGroupVersion.String(),
 				},
 				Spec: clientauthenticationv1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1.Cluster{
@@ -92,7 +91,7 @@ func TestLoadExecCredential(t *testing.T) {
 		},
 		{
 			name: "v1beta1 happy path",
-			data: marshal(t, clientauthenticationv1beta1.SchemeGroupVersion, &clientauthenticationv1beta1.ExecCredential{
+			data: marshal(t, &clientauthenticationv1beta1.ExecCredential{
 				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1beta1.Cluster{
 						Server:                   "https://some-server/some/path",
@@ -108,8 +107,8 @@ func TestLoadExecCredential(t *testing.T) {
 			}),
 			wantExecCredential: &clientauthenticationv1beta1.ExecCredential{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "ExecCredential",
-					APIVersion: clientauthenticationv1beta1.SchemeGroupVersion.String(),
+					Kind: "ExecCredential",
+					//APIVersion: clientauthenticationv1beta1.SchemeGroupVersion.String(),
 				},
 				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1beta1.Cluster{
@@ -136,7 +135,7 @@ func TestLoadExecCredential(t *testing.T) {
 		},
 		{
 			name: "v1 nil config",
-			data: marshal(t, clientauthenticationv1.SchemeGroupVersion, &clientauthenticationv1.ExecCredential{
+			data: marshal(t, &clientauthenticationv1.ExecCredential{
 				Spec: clientauthenticationv1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1.Cluster{
 						Server:                   "https://some-server/some/path",
@@ -149,8 +148,8 @@ func TestLoadExecCredential(t *testing.T) {
 			}),
 			wantExecCredential: &clientauthenticationv1.ExecCredential{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "ExecCredential",
-					APIVersion: clientauthenticationv1.SchemeGroupVersion.String(),
+					Kind: "ExecCredential",
+					//APIVersion: clientauthenticationv1.SchemeGroupVersion.String(),
 				},
 				Spec: clientauthenticationv1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1.Cluster{
@@ -174,7 +173,7 @@ func TestLoadExecCredential(t *testing.T) {
 		},
 		{
 			name: "v1beta1 nil config",
-			data: marshal(t, clientauthenticationv1beta1.SchemeGroupVersion, &clientauthenticationv1beta1.ExecCredential{
+			data: marshal(t, &clientauthenticationv1beta1.ExecCredential{
 				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1beta1.Cluster{
 						Server:                   "https://some-server/some/path",
@@ -187,8 +186,8 @@ func TestLoadExecCredential(t *testing.T) {
 			}),
 			wantExecCredential: &clientauthenticationv1beta1.ExecCredential{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "ExecCredential",
-					APIVersion: clientauthenticationv1beta1.SchemeGroupVersion.String(),
+					Kind: "ExecCredential",
+					//APIVersion: clientauthenticationv1beta1.SchemeGroupVersion.String(),
 				},
 				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1beta1.Cluster{
@@ -212,7 +211,7 @@ func TestLoadExecCredential(t *testing.T) {
 		},
 		{
 			name: "v1 invalid cluster",
-			data: marshal(t, clientauthenticationv1.SchemeGroupVersion, &clientauthenticationv1.ExecCredential{
+			data: marshal(t, &clientauthenticationv1.ExecCredential{
 				Spec: clientauthenticationv1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1.Cluster{
 						ProxyURL: "invalid- url\n",
@@ -223,7 +222,7 @@ func TestLoadExecCredential(t *testing.T) {
 		},
 		{
 			name: "v1beta1 invalid cluster",
-			data: marshal(t, clientauthenticationv1beta1.SchemeGroupVersion, &clientauthenticationv1beta1.ExecCredential{
+			data: marshal(t, &clientauthenticationv1beta1.ExecCredential{
 				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1beta1.Cluster{
 						ProxyURL: "invalid- url\n",
@@ -234,17 +233,17 @@ func TestLoadExecCredential(t *testing.T) {
 		},
 		{
 			name:            "v1 nil cluster",
-			data:            marshal(t, clientauthenticationv1.SchemeGroupVersion, &clientauthenticationv1.ExecCredential{}),
+			data:            marshal(t, &clientauthenticationv1.ExecCredential{}),
 			wantErrorPrefix: "ExecCredential does not contain cluster information",
 		},
 		{
 			name:            "v1beta1 nil cluster",
-			data:            marshal(t, clientauthenticationv1beta1.SchemeGroupVersion, &clientauthenticationv1beta1.ExecCredential{}),
+			data:            marshal(t, &clientauthenticationv1beta1.ExecCredential{}),
 			wantErrorPrefix: "ExecCredential does not contain cluster information",
 		},
 		{
 			name:            "invalid object kind",
-			data:            marshal(t, metav1.SchemeGroupVersion, &metav1.Status{}),
+			data:            marshal(t, &metav1.Status{}),
 			wantErrorPrefix: "invalid group/kind: wanted ExecCredential.client.authentication.k8s.io, got Status",
 		},
 		{
@@ -291,10 +290,10 @@ func TestLoadExecCredential(t *testing.T) {
 	}
 }
 
-func marshal(t *testing.T, gv schema.GroupVersion, obj runtime.Object) []byte {
+func marshal(t *testing.T, obj runtime.Object) []byte {
 	t.Helper()
 
-	data, err := runtime.Encode(codecs.LegacyCodec(gv), obj)
+	data, err := runtime.Encode(codecs.LegacyCodec(), obj)
 	if err != nil {
 		t.Fatal(err)
 	}

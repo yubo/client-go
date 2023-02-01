@@ -19,10 +19,10 @@ package versioned
 import (
 	"encoding/json"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/streaming"
-	"k8s.io/apimachinery/pkg/watch"
+	metav1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/golib/watch"
 )
 
 // Encoder serializes watch.Events into io.Writer. The internal objects

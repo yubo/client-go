@@ -20,14 +20,12 @@ import (
 	"fmt"
 	"net/url"
 	"path"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 // DefaultServerURL converts a host, host:port, or URL string to the default base server API path
 // to use with a Client at a given API version following the standard conventions for a
 // Kubernetes API.
-func DefaultServerURL(host, apiPath string, groupVersion schema.GroupVersion, defaultTLS bool) (*url.URL, string, error) {
+func DefaultServerURL(host, apiPath string, defaultTLS bool) (*url.URL, string, error) {
 	if host == "" {
 		return nil, "", fmt.Errorf("host must be a URL or a host:port pair")
 	}
@@ -56,23 +54,17 @@ func DefaultServerURL(host, apiPath string, groupVersion schema.GroupVersion, de
 	// hostURL.Path should be blank.
 	//
 	// versionedAPIPath, a path relative to baseURL.Path, points to a versioned API base
-	versionedAPIPath := DefaultVersionedAPIPath(apiPath, groupVersion)
+	versionedAPIPath := DefaultVersionedAPIPath(apiPath)
 
 	return hostURL, versionedAPIPath, nil
 }
 
 // DefaultVersionedAPIPathFor constructs the default path for the given group version, assuming the given
 // API path, following the standard conventions of the Kubernetes API.
-func DefaultVersionedAPIPath(apiPath string, groupVersion schema.GroupVersion) string {
+func DefaultVersionedAPIPath(apiPath string) string {
 	versionedAPIPath := path.Join("/", apiPath)
 
 	// Add the version to the end of the path
-	if len(groupVersion.Group) > 0 {
-		versionedAPIPath = path.Join(versionedAPIPath, groupVersion.Group, groupVersion.Version)
-
-	} else {
-		versionedAPIPath = path.Join(versionedAPIPath, groupVersion.Version)
-	}
 
 	return versionedAPIPath
 }
@@ -90,8 +82,8 @@ func defaultServerUrlFor(config *Config) (*url.URL, string, error) {
 		host = "localhost"
 	}
 
-	if config.GroupVersion != nil {
-		return DefaultServerURL(host, config.APIPath, *config.GroupVersion, defaultTLS)
-	}
-	return DefaultServerURL(host, config.APIPath, schema.GroupVersion{}, defaultTLS)
+	//if config.GroupVersion != nil {
+	//	return DefaultServerURL(host, config.APIPath, *config.GroupVersion, defaultTLS)
+	//}
+	return DefaultServerURL(host, config.APIPath, defaultTLS)
 }

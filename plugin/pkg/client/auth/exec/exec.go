@@ -35,20 +35,16 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/term"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	utilnet "k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/client-go/pkg/apis/clientauthentication"
-	"k8s.io/client-go/pkg/apis/clientauthentication/install"
-	clientauthenticationv1 "k8s.io/client-go/pkg/apis/clientauthentication/v1"
-	clientauthenticationv1beta1 "k8s.io/client-go/pkg/apis/clientauthentication/v1beta1"
-	"k8s.io/client-go/tools/clientcmd/api"
-	"k8s.io/client-go/tools/metrics"
-	"k8s.io/client-go/transport"
-	"k8s.io/client-go/util/connrotation"
+	"github.com/yubo/client-go/pkg/apis/clientauthentication"
+	"github.com/yubo/client-go/tools/clientcmd/api"
+	"github.com/yubo/client-go/tools/metrics"
+	"github.com/yubo/client-go/transport"
+	"github.com/yubo/client-go/util/connrotation"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/scheme"
+	"github.com/yubo/golib/util/clock"
+	utilnet "github.com/yubo/golib/util/net"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/clock"
 )
 
 const execInfoEnv = "KUBERNETES_EXEC_INFO"
@@ -59,22 +55,21 @@ It looks like you are trying to use a client-go credential plugin that is not in
 To learn more about this feature, consult the documentation available at:
       https://kubernetes.io/docs/reference/access-authn-authz/authentication/#client-go-credential-plugins`
 
-var scheme = runtime.NewScheme()
-var codecs = serializer.NewCodecFactory(scheme)
+var codecs = scheme.Codecs
 
-func init() {
-	install.Install(scheme)
-}
+//func init() {
+//	install.Install(scheme)
+//}
 
 var (
 	// Since transports can be constantly re-initialized by programs like kubectl,
 	// keep a cache of initialized authenticators keyed by a hash of their config.
 	globalCache = newCache()
 	// The list of API versions we accept.
-	apiVersions = map[string]schema.GroupVersion{
-		clientauthenticationv1beta1.SchemeGroupVersion.String(): clientauthenticationv1beta1.SchemeGroupVersion,
-		clientauthenticationv1.SchemeGroupVersion.String():      clientauthenticationv1.SchemeGroupVersion,
-	}
+	//apiVersions = map[string]schema.GroupVersion{
+	//	clientauthenticationv1beta1.SchemeGroupVersion.String(): clientauthenticationv1beta1.SchemeGroupVersion,
+	//	clientauthenticationv1.SchemeGroupVersion.String():      clientauthenticationv1.SchemeGroupVersion,
+	//}
 )
 
 func newCache() *cache {
@@ -168,10 +163,10 @@ func newAuthenticator(c *cache, isTerminalFunc func(int) bool, config *api.ExecC
 		return a, nil
 	}
 
-	gv, ok := apiVersions[config.APIVersion]
-	if !ok {
-		return nil, fmt.Errorf("exec plugin: invalid apiVersion %q", config.APIVersion)
-	}
+	//gv, ok := apiVersions[config.APIVersion]
+	//if !ok {
+	//	return nil, fmt.Errorf("exec plugin: invalid apiVersion %q", config.APIVersion)
+	//}
 
 	connTracker := connrotation.NewConnectionTracker()
 	defaultDialer := connrotation.NewDialerWithTracker(
@@ -180,9 +175,9 @@ func newAuthenticator(c *cache, isTerminalFunc func(int) bool, config *api.ExecC
 	)
 
 	a := &Authenticator{
-		cmd:                config.Command,
-		args:               config.Args,
-		group:              gv,
+		cmd:  config.Command,
+		args: config.Args,
+		//group:              gv,
 		cluster:            cluster,
 		provideClusterInfo: config.ProvideClusterInfo,
 
@@ -245,9 +240,9 @@ func isInteractive(isTerminalFunc func(int) bool, config *api.ExecConfig) (bool,
 // The plugin input and output are defined by the API group client.authentication.k8s.io.
 type Authenticator struct {
 	// Set by the config
-	cmd                string
-	args               []string
-	group              schema.GroupVersion
+	cmd  string
+	args []string
+	//group              schema.GroupVersion
 	env                []string
 	cluster            *clientauthentication.Cluster
 	provideClusterInfo bool
@@ -428,7 +423,7 @@ func (a *Authenticator) refreshCredsLocked() error {
 	}
 
 	env := append(a.environ(), a.env...)
-	data, err := runtime.Encode(codecs.LegacyCodec(a.group), cred)
+	data, err := runtime.Encode(codecs.LegacyCodec(), cred)
 	if err != nil {
 		return fmt.Errorf("encode ExecCredentials: %v", err)
 	}
@@ -449,14 +444,13 @@ func (a *Authenticator) refreshCredsLocked() error {
 		return a.wrapCmdRunErrorLocked(err)
 	}
 
-	_, gvk, err := codecs.UniversalDecoder(a.group).Decode(stdout.Bytes(), nil, cred)
-	if err != nil {
+	if _, err := codecs.UniversalDecoder( /*a.group*/ ).Decode(stdout.Bytes(), cred); err != nil {
 		return fmt.Errorf("decoding stdout: %v", err)
 	}
-	if gvk.Group != a.group.Group || gvk.Version != a.group.Version {
-		return fmt.Errorf("exec plugin is configured to use API version %s, plugin returned version %s",
-			a.group, schema.GroupVersion{Group: gvk.Group, Version: gvk.Version})
-	}
+	//if gvk.Group != a.group.Group || gvk.Version != a.group.Version {
+	//	return fmt.Errorf("exec plugin is configured to use API version %s, plugin returned version %s",
+	//		a.group, schema.GroupVersion{Group: gvk.Group, Version: gvk.Version})
+	//}
 
 	if cred.Status == nil {
 		return fmt.Errorf("exec plugin didn't return a status field")

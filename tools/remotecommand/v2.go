@@ -22,8 +22,8 @@ import (
 	"net/http"
 	"sync"
 
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/runtime"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/util/runtime"
 )
 
 // streamProtocolV2 implements version 2 of the streaming protocol for attach
@@ -52,7 +52,7 @@ func (p *streamProtocolV2) createStreams(conn streamCreator) error {
 	headers := http.Header{}
 
 	// set up error stream
-	headers.Set(v1.StreamType, v1.StreamTypeError)
+	headers.Set(api.StreamType, api.StreamTypeError)
 	p.errorStream, err = conn.CreateStream(headers)
 	if err != nil {
 		return err
@@ -60,7 +60,7 @@ func (p *streamProtocolV2) createStreams(conn streamCreator) error {
 
 	// set up stdin stream
 	if p.Stdin != nil {
-		headers.Set(v1.StreamType, v1.StreamTypeStdin)
+		headers.Set(api.StreamType, api.StreamTypeStdin)
 		p.remoteStdin, err = conn.CreateStream(headers)
 		if err != nil {
 			return err
@@ -69,7 +69,7 @@ func (p *streamProtocolV2) createStreams(conn streamCreator) error {
 
 	// set up stdout stream
 	if p.Stdout != nil {
-		headers.Set(v1.StreamType, v1.StreamTypeStdout)
+		headers.Set(api.StreamType, api.StreamTypeStdout)
 		p.remoteStdout, err = conn.CreateStream(headers)
 		if err != nil {
 			return err
@@ -78,7 +78,7 @@ func (p *streamProtocolV2) createStreams(conn streamCreator) error {
 
 	// set up stderr stream
 	if p.Stderr != nil && !p.Tty {
-		headers.Set(v1.StreamType, v1.StreamTypeStderr)
+		headers.Set(api.StreamType, api.StreamTypeStderr)
 		p.remoteStderr, err = conn.CreateStream(headers)
 		if err != nil {
 			return err

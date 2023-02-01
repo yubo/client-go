@@ -19,43 +19,31 @@ package events
 import (
 	"testing"
 
-	corev1 "k8s.io/api/core/v1"
-	eventsv1 "k8s.io/api/events/v1"
-	eventsv1beta1 "k8s.io/api/events/v1beta1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
+	"github.com/yubo/golib/api"
+	"github.com/yubo/golib/fields"
 )
 
 func TestGetFieldSelector(t *testing.T) {
 	tests := []struct {
-		desc                      string
-		eventsGroupVersion        schema.GroupVersion
-		regardingName             string
-		regardingGroupVersionKind schema.GroupVersionKind
-		regardingUID              types.UID
-		expected                  fields.Set
-		expectedErr               bool
+		desc string
+		//eventsGroupVersion        schema.GroupVersion
+		regardingName string
+		//regardingGroupVersionKind schema.GroupVersionKind
+		regardingUID api.UID
+		expected     fields.Set
+		expectedErr  bool
 	}{
 		{
-			desc:                      "events.k8s.io/v1beta1 event with empty parameters",
-			eventsGroupVersion:        eventsv1beta1.SchemeGroupVersion,
-			regardingName:             "",
-			regardingGroupVersionKind: schema.GroupVersionKind{},
-			regardingUID:              "",
-			expected:                  fields.Set{},
-			expectedErr:               false,
+			desc:          "events.k8s.io/v1beta1 event with empty parameters",
+			regardingName: "",
+			regardingUID:  "",
+			expected:      fields.Set{},
+			expectedErr:   false,
 		},
 		{
-			desc:               "events.k8s.io/v1beta1 event with non-empty parameters",
-			eventsGroupVersion: eventsv1beta1.SchemeGroupVersion,
-			regardingName:      "test-deployment",
-			regardingGroupVersionKind: schema.GroupVersionKind{
-				Kind:    "Deployment",
-				Group:   "apps",
-				Version: "v1",
-			},
-			regardingUID: "2c55cad7-ee4e-11e9-abe1-525400e7bc6b",
+			desc:          "events.k8s.io/v1beta1 event with non-empty parameters",
+			regardingName: "test-deployment",
+			regardingUID:  "2c55cad7-ee4e-11e9-abe1-525400e7bc6b",
 			expected: fields.Set{
 				"regarding.name":       "test-deployment",
 				"regarding.kind":       "Deployment",
@@ -65,24 +53,16 @@ func TestGetFieldSelector(t *testing.T) {
 			expectedErr: false,
 		},
 		{
-			desc:                      "events.k8s.io/v1 event with empty parameters",
-			eventsGroupVersion:        eventsv1.SchemeGroupVersion,
-			regardingName:             "",
-			regardingGroupVersionKind: schema.GroupVersionKind{},
-			regardingUID:              "",
-			expected:                  fields.Set{},
-			expectedErr:               false,
+			desc:          "events.k8s.io/v1 event with empty parameters",
+			regardingName: "",
+			regardingUID:  "",
+			expected:      fields.Set{},
+			expectedErr:   false,
 		},
 		{
-			desc:               "events.k8s.io/v1 event with non-empty parameters",
-			eventsGroupVersion: eventsv1.SchemeGroupVersion,
-			regardingName:      "test-deployment",
-			regardingGroupVersionKind: schema.GroupVersionKind{
-				Kind:    "Deployment",
-				Group:   "apps",
-				Version: "v1",
-			},
-			regardingUID: "2c55cad7-ee4e-11e9-abe1-525400e7bc6b",
+			desc:          "events.k8s.io/v1 event with non-empty parameters",
+			regardingName: "test-deployment",
+			regardingUID:  "2c55cad7-ee4e-11e9-abe1-525400e7bc6b",
 			expected: fields.Set{
 				"regarding.name":       "test-deployment",
 				"regarding.kind":       "Deployment",
@@ -92,24 +72,16 @@ func TestGetFieldSelector(t *testing.T) {
 			expectedErr: false,
 		},
 		{
-			desc:                      "v1 event with non-empty parameters",
-			eventsGroupVersion:        corev1.SchemeGroupVersion,
-			regardingName:             "",
-			regardingGroupVersionKind: schema.GroupVersionKind{},
-			regardingUID:              "",
-			expected:                  fields.Set{},
-			expectedErr:               false,
+			desc:          "v1 event with non-empty parameters",
+			regardingName: "",
+			regardingUID:  "",
+			expected:      fields.Set{},
+			expectedErr:   false,
 		},
 		{
-			desc:               "v1 event with non-empty parameters",
-			eventsGroupVersion: corev1.SchemeGroupVersion,
-			regardingName:      "test-deployment",
-			regardingGroupVersionKind: schema.GroupVersionKind{
-				Kind:    "Deployment",
-				Group:   "apps",
-				Version: "v1",
-			},
-			regardingUID: "2c55cad7-ee4e-11e9-abe1-525400e7bc6b",
+			desc:          "v1 event with non-empty parameters",
+			regardingName: "test-deployment",
+			regardingUID:  "2c55cad7-ee4e-11e9-abe1-525400e7bc6b",
 			expected: fields.Set{
 				"involvedObject.name":       "test-deployment",
 				"involvedObject.kind":       "Deployment",
@@ -119,22 +91,16 @@ func TestGetFieldSelector(t *testing.T) {
 			expectedErr: false,
 		},
 		{
-			desc:               "unknown group version",
-			eventsGroupVersion: schema.GroupVersion{Group: corev1.GroupName, Version: "v1alpha1"},
-			regardingName:      "test-deployment",
-			regardingGroupVersionKind: schema.GroupVersionKind{
-				Kind:    "Deployment",
-				Group:   "apps",
-				Version: "v1",
-			},
-			regardingUID: "2c55cad7-ee4e-11e9-abe1-525400e7bc6b",
-			expected:     nil,
-			expectedErr:  true,
+			desc:          "unknown group version",
+			regardingName: "test-deployment",
+			regardingUID:  "2c55cad7-ee4e-11e9-abe1-525400e7bc6b",
+			expected:      nil,
+			expectedErr:   true,
 		},
 	}
 
 	for _, test := range tests {
-		result, err := GetFieldSelector(test.eventsGroupVersion, test.regardingGroupVersionKind, test.regardingName, test.regardingUID)
+		result, err := GetFieldSelector(test.regardingName, test.regardingUID)
 		if !test.expectedErr && err != nil {
 			t.Errorf("Unable to get field selector with %v", err)
 		}

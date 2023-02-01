@@ -31,10 +31,9 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	utilnet "k8s.io/apimachinery/pkg/util/net"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"github.com/yubo/golib/runtime/serializer"
+	utilnet "github.com/yubo/golib/util/net"
+	"github.com/yubo/golib/util/wait"
 )
 
 type tcpLB struct {
@@ -122,7 +121,7 @@ func TestReconnectBrokenTCP(t *testing.T) {
 		Timeout:   1 * time.Second,
 		// These fields are required to create a REST client.
 		ContentConfig: ContentConfig{
-			GroupVersion:         &schema.GroupVersion{},
+			//GroupVersion:         &schema.GroupVersion{},
 			NegotiatedSerializer: &serializer.CodecFactory{},
 		},
 	}
@@ -197,7 +196,7 @@ func TestReconnectBrokenTCP_HTTP1(t *testing.T) {
 		Timeout: wait.ForeverTestTimeout,
 		// These fields are required to create a REST client.
 		ContentConfig: ContentConfig{
-			GroupVersion:         &schema.GroupVersion{},
+			//GroupVersion:         &schema.GroupVersion{},
 			NegotiatedSerializer: &serializer.CodecFactory{},
 		},
 	}
@@ -285,7 +284,7 @@ func TestReconnectBrokenTCPInFlight_HTTP1(t *testing.T) {
 		Timeout: wait.ForeverTestTimeout,
 		// These fields are required to create a REST client.
 		ContentConfig: ContentConfig{
-			GroupVersion:         &schema.GroupVersion{},
+			//GroupVersion:         &schema.GroupVersion{},
 			NegotiatedSerializer: &serializer.CodecFactory{},
 		},
 	}
@@ -361,7 +360,7 @@ func TestRestClientTimeout(t *testing.T) {
 		Timeout: 1 * time.Second,
 		// These fields are required to create a REST client.
 		ContentConfig: ContentConfig{
-			GroupVersion:         &schema.GroupVersion{},
+			//GroupVersion:         &schema.GroupVersion{},
 			NegotiatedSerializer: &serializer.CodecFactory{},
 		},
 	}

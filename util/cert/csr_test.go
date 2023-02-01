@@ -24,8 +24,8 @@ import (
 	"os"
 	"testing"
 
-	"k8s.io/client-go/util/keyutil"
-	netutils "k8s.io/utils/net"
+	"github.com/yubo/client-go/util/keyutil"
+	netutils "github.com/yubo/golib/util/net"
 )
 
 func TestMakeCSR(t *testing.T) {

@@ -21,8 +21,8 @@ import (
 	"sync"
 	"time"
 
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/utils/clock"
+	utilruntime "github.com/yubo/golib/util/runtime"
+	"github.com/yubo/golib/util/clock"
 )
 
 // DelayingInterface is an Interface that can Add an item at a later time. This makes it easier to

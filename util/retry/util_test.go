@@ -20,14 +20,13 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/util/wait"
 )
 
 func TestRetryOnConflict(t *testing.T) {
 	opts := wait.Backoff{Factor: 1.0, Steps: 3}
-	conflictErr := errors.NewConflict(schema.GroupResource{Resource: "test"}, "other", nil)
+	conflictErr := errors.NewConflict("other", nil)
 
 	// never returns
 	err := RetryOnConflict(opts, func() error {
@@ -61,7 +60,7 @@ func TestRetryOnConflict(t *testing.T) {
 	err = RetryOnConflict(opts, func() error {
 		if i < 2 {
 			i++
-			return errors.NewConflict(schema.GroupResource{Resource: "test"}, "other", nil)
+			return errors.NewConflict("other", nil)
 		}
 		return nil
 	})

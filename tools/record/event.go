@@ -21,17 +21,17 @@ import (
 	"math/rand"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/watch"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/record/util"
-	ref "k8s.io/client-go/tools/reference"
+	restclient "github.com/yubo/client-go/rest"
+	"github.com/yubo/client-go/tools/record/util"
+	ref "github.com/yubo/client-go/tools/reference"
+	metav1 "github.com/yubo/golib/api"
+	v1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/api/errors"
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/util/clock"
+	utilruntime "github.com/yubo/golib/util/runtime"
+	"github.com/yubo/golib/watch"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/clock"
 )
 
 const maxTriesPerEvent = 12
@@ -130,20 +130,20 @@ type EventBroadcaster interface {
 
 	// NewRecorder returns an EventRecorder that can be used to send events to this EventBroadcaster
 	// with the event source set to the given event source.
-	NewRecorder(scheme *runtime.Scheme, source v1.EventSource) EventRecorder
+	NewRecorder(source v1.EventSource) EventRecorder
 
 	// Shutdown shuts down the broadcaster
 	Shutdown()
 }
 
-// EventRecorderAdapter is a wrapper around a "k8s.io/client-go/tools/record".EventRecorder
-// implementing the new "k8s.io/client-go/tools/events".EventRecorder interface.
+// EventRecorderAdapter is a wrapper around a "github.com/yubo/client-go/tools/record".EventRecorder
+// implementing the new "github.com/yubo/client-go/tools/events".EventRecorder interface.
 type EventRecorderAdapter struct {
 	recorder EventRecorder
 }
 
 // NewEventRecorderAdapter returns an adapter implementing the new
-// "k8s.io/client-go/tools/events".EventRecorder interface.
+// "github.com/yubo/client-go/tools/events".EventRecorder interface.
 func NewEventRecorderAdapter(recorder EventRecorder) *EventRecorderAdapter {
 	return &EventRecorderAdapter{
 		recorder: recorder,
@@ -318,19 +318,19 @@ func (e *eventBroadcasterImpl) StartEventWatcher(eventHandler func(*v1.Event)) w
 }
 
 // NewRecorder returns an EventRecorder that records events with the given event source.
-func (e *eventBroadcasterImpl) NewRecorder(scheme *runtime.Scheme, source v1.EventSource) EventRecorder {
-	return &recorderImpl{scheme, source, e.Broadcaster, clock.RealClock{}}
+func (e *eventBroadcasterImpl) NewRecorder(source v1.EventSource) EventRecorder {
+	return &recorderImpl{source, e.Broadcaster, clock.RealClock{}}
 }
 
 type recorderImpl struct {
-	scheme *runtime.Scheme
+	//scheme *runtime.Scheme
 	source v1.EventSource
 	*watch.Broadcaster
 	clock clock.PassiveClock
 }
 
 func (recorder *recorderImpl) generateEvent(object runtime.Object, annotations map[string]string, eventtype, reason, message string) {
-	ref, err := ref.GetReference(recorder.scheme, object)
+	ref, err := ref.GetReference(object)
 	if err != nil {
 		klog.Errorf("Could not construct reference to: '%#v' due to: '%v'. Will not report event: '%v' '%v' '%v'", object, err, eventtype, reason, message)
 		return

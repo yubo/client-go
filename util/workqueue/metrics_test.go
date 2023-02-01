@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	testingclock "k8s.io/utils/clock/testing"
+	testingclock "github.com/yubo/golib/util/clock/testing"
 )
 
 type testMetrics struct {

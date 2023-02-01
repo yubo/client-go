@@ -25,6 +25,15 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	"github.com/yubo/golib/runtime"
+	"github.com/yubo/golib/runtime/serializer/json"
+	"github.com/yubo/golib/runtime/serializer/versioning"
+)
+
+var (
+	// from k8s.io/client-go/tools/clientcmd/api/latest
+	Codec runtime.Codec
 )
 
 func init() {
@@ -32,6 +41,11 @@ func init() {
 	redactedBytes = []byte(string(sDec))
 	sDec, _ = base64.StdEncoding.DecodeString("DATA+OMITTED")
 	dataOmittedBytes = []byte(string(sDec))
+
+	yamlSerializer := json.NewSerializerWithOptions(
+		json.SerializerOptions{Yaml: true, Pretty: false, Strict: false},
+	)
+	Codec = versioning.NewDefaultingCodecForScheme(yamlSerializer, yamlSerializer)
 }
 
 // IsConfigEmpty returns true if the config is empty.
@@ -83,8 +97,8 @@ func MinifyConfig(config *Config) error {
 }
 
 var (
-	dataOmittedBytes []byte
 	redactedBytes    []byte
+	dataOmittedBytes []byte
 )
 
 // ShortenConfig redacts raw data entries from the config object for a human-readable view.

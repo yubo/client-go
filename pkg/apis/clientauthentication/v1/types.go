@@ -17,11 +17,11 @@ limitations under the License.
 package v1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	metav1 "github.com/yubo/golib/api"
+	"github.com/yubo/golib/runtime"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:deepcopy-gen:interfaces=github.com/yubo/golib/runtime.Object
 
 // ExecCredential is used by exec-based plugins to communicate credentials to
 // HTTP transports.
@@ -73,7 +73,7 @@ type ExecCredentialStatus struct {
 //
 // To ensure that this struct contains everything someone would need to communicate
 // with a kubernetes cluster (just like they would via a kubeconfig), the fields
-// should shadow "k8s.io/client-go/tools/clientcmd/api/v1".Cluster, with the exception
+// should shadow "github.com/yubo/client-go/tools/clientcmd/api/v1".Cluster, with the exception
 // of CertificateAuthority, since CA data will always be passed to the plugin as bytes.
 type Cluster struct {
 	// Server is the address of the kubernetes cluster (https://hostname:port).
