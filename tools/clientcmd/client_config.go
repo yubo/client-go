@@ -28,6 +28,7 @@ import (
 	restclient "github.com/yubo/client-go/rest"
 	clientauth "github.com/yubo/client-go/tools/auth"
 	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
+	"github.com/yubo/golib/util"
 	"k8s.io/klog/v2"
 
 	"github.com/imdario/mergo"
@@ -36,6 +37,9 @@ import (
 const (
 	// clusterExtensionKey is reserved in the cluster extensions list for exec plugin config.
 	clusterExtensionKey = "client.authentication.k8s.io/exec"
+
+	// ignore secure/TLS check
+	insecure = true
 )
 
 var (
@@ -189,7 +193,7 @@ func (config *DirectClientConfig) ClientConfig() (*restclient.Config, error) {
 	}
 
 	// only try to read the auth information if we are secure
-	if restclient.IsConfigTransportTLS(*clientConfig) {
+	if insecure && restclient.IsConfigTransportTLS(*clientConfig) {
 		var err error
 		var persister restclient.AuthProviderConfigPersister
 		if config.configAccess != nil {
@@ -287,6 +291,7 @@ func (config *DirectClientConfig) getUserIdentificationPartialConfig(configAuthI
 		if len(config.promptedCredentials.username) > 0 && len(config.promptedCredentials.password) > 0 {
 			mergedConfig.Username = config.promptedCredentials.username
 			mergedConfig.Password = config.promptedCredentials.password
+			klog.Infof("--%s\n", util.JsonStr(mergedConfig, true))
 			return mergedConfig, nil
 		}
 		prompter := NewPromptingAuthLoader(fallbackReader)

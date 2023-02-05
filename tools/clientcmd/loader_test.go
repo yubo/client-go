@@ -315,7 +315,7 @@ users:
 
 	_, err = LoadFromFile(configFile.Name())
 	if err == nil || !strings.Contains(err.Error(),
-		"error converting *[]NamedCluster into *map[string]*api.Cluster: duplicate name \"kubeconfig-cluster\" in list") {
+		"error converting *[]NamedCluster into *map[string]*Cluster: duplicate name \"kubeconfig-cluster\" in list") {
 		t.Error("Expected error in loading duplicate cluster name, got none")
 	}
 }

@@ -170,11 +170,6 @@ func (c *RESTClient) Verb(verb string) *Request {
 	return NewRequest(c).Verb(verb)
 }
 
-func (r *Request) Debug() *Request {
-	r.debug = true
-	return r
-}
-
 // Post begins a POST request. Short for c.Verb("POST").
 func (c *RESTClient) Post() *Request {
 	return c.Verb("POST")

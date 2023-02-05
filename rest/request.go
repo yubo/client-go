@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime"
@@ -43,6 +44,7 @@ import (
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/runtime/serializer/streaming"
+	"github.com/yubo/golib/util"
 	"github.com/yubo/golib/util/clock"
 	"github.com/yubo/golib/util/net"
 	"github.com/yubo/golib/watch"
@@ -103,19 +105,22 @@ type Request struct {
 	maxRetries  int
 	debug       bool
 
+	// {c.base}/{pathPrefix}/namespaces/{namespace}//{resource}/{resource-name}/{sub-resource}/{subpath}
+
 	// generic components accessible via method setters
 	verb       string
-	pathPrefix string
+	pathPrefix string // api/v1
 	subpath    string
 	params     url.Values
 	headers    http.Header
+	paths      map[string]string
 
 	// structural elements of the request that are part of the Kubernetes API conventions
-	namespace    string
+	namespace    string // default
 	namespaceSet bool
-	resource     string
-	resourceName string
-	subresource  string
+	resource     string // pods
+	resourceName string // podName
+	subresource  string // status
 
 	// output
 	err error
@@ -172,16 +177,21 @@ func NewRequest(c *RESTClient) *Request {
 // NewRequestWithClient creates a Request with an embedded RESTClient for use in test scenarios.
 func NewRequestWithClient(base *url.URL, versionedAPIPath string, content ClientContentConfig, client *http.Client) *Request {
 	return NewRequest(&RESTClient{
-		base:             base,
-		versionedAPIPath: versionedAPIPath,
-		content:          content,
-		Client:           client,
+		base: base,
+		//versionedAPIPath: versionedAPIPath,
+		content: content,
+		Client:  client,
 	})
 }
 
 // Verb sets the verb this request will use.
 func (r *Request) Verb(verb string) *Request {
 	r.verb = verb
+	return r
+}
+
+func (r *Request) Debug() *Request {
+	r.debug = true
 	return r
 }
 
@@ -366,11 +376,11 @@ func (r *Request) Param(paramName, s string) *Request {
 // to the request. Use this to provide versioned query parameters from client libraries.
 // VersionedParams will not write query parameters that have omitempty set and are empty. If a
 // parameter has already been set it is appended to (Params and VersionedParams are additive).
-func (r *Request) VersionedParams(obj runtime.Object, codec runtime.ParameterCodec) *Request {
+func (r *Request) VersionedParams(obj runtime.Object, codec api.ParameterCodec) *Request {
 	return r.SpecificallyVersionedParams(obj, codec)
 }
 
-func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec runtime.ParameterCodec) *Request {
+func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec api.ParameterCodec) *Request {
 	if r.err != nil {
 		return r
 	}
@@ -379,12 +389,31 @@ func (r *Request) SpecificallyVersionedParams(obj runtime.Object, codec runtime.
 		r.err = err
 		return r
 	}
-	for k, v := range params {
+
+	// query
+	for k, v := range params.Query {
 		if r.params == nil {
 			r.params = make(url.Values)
 		}
 		r.params[k] = append(r.params[k], v...)
 	}
+
+	// header
+	for k, v := range params.Header {
+		if r.headers == nil {
+			r.headers = make(http.Header)
+		}
+		r.headers[k] = append(r.headers[k], v...)
+	}
+
+	// path
+	for k, v := range params.Path {
+		if r.paths == nil {
+			r.paths = make(map[string]string)
+		}
+		r.paths[k] = v
+	}
+
 	return r
 }
 
@@ -404,6 +433,14 @@ func (r *Request) SetHeader(key string, values ...string) *Request {
 	for _, value := range values {
 		r.headers.Add(key, value)
 	}
+	return r
+}
+
+func (r *Request) SetPath(pathName, value string) *Request {
+	if r.params == nil {
+		r.paths = make(map[string]string)
+	}
+	r.paths[pathName] = value
 	return r
 }
 
@@ -496,12 +533,16 @@ func (r *Request) URL() *url.URL {
 		p = path.Join(p, r.resourceName, r.subresource, r.subpath)
 	}
 
+	// path
+	p = invokePathVariable(p, r.paths)
+
 	finalURL := &url.URL{}
 	if r.c.base != nil {
 		*finalURL = *r.c.base
 	}
 	finalURL.Path = p
 
+	// query
 	query := url.Values{}
 	for key, values := range r.params {
 		for _, value := range values {
@@ -515,6 +556,40 @@ func (r *Request) URL() *url.URL {
 	}
 	finalURL.RawQuery = query.Encode()
 	return finalURL
+}
+
+func invokePathVariable(path string, data map[string]string) string {
+	var buf strings.Builder
+	var begin int
+
+	internal := false
+	for i, c := range []byte(path) {
+		if !internal {
+			if c == '{' {
+				internal = true
+				begin = i
+			} else {
+				buf.WriteByte(c)
+			}
+			continue
+		}
+
+		if c == '}' {
+			k := path[begin+1 : i]
+			if v, ok := data[k]; ok {
+				buf.WriteString(url.PathEscape(v))
+			} else {
+				panic(fmt.Errorf("param {%s} not found in data (%s)", k, util.JsonStr(data, true)))
+			}
+			internal = false
+		}
+	}
+
+	if internal {
+		panic(fmt.Errorf("param %s>>%s<< is not ended", path[:begin], path[begin:]))
+	}
+
+	return buf.String()
 }
 
 // finalURLTemplate is similar to URL(), but will make all specific parameter values equal
@@ -1360,6 +1435,19 @@ func (r Result) Into(obj runtime.Object) error {
 		}
 	}
 	return nil
+}
+
+func (r Result) JsonInto(obj runtime.Object) error {
+	if r.err != nil || obj == nil {
+		return r.Error()
+	}
+
+	err := json.Unmarshal(r.body, obj)
+	if err != nil {
+		klog.ErrorS(err, "jsonunmarshal", "body", string(r.body))
+	}
+
+	return err
 }
 
 // WasCreated updates the provided bool pointer to whether the server returned
