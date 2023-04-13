@@ -193,7 +193,7 @@ func (config *DirectClientConfig) ClientConfig() (*restclient.Config, error) {
 	}
 
 	// only try to read the auth information if we are secure
-	if insecure && restclient.IsConfigTransportTLS(*clientConfig) {
+	if insecure || restclient.IsConfigTransportTLS(*clientConfig) {
 		var err error
 		var persister restclient.AuthProviderConfigPersister
 		if config.configAccess != nil {
