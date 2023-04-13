@@ -1,10 +1,6 @@
 module github.com/yubo/client-go
 
-go 1.19
-
-replace github.com/yubo/golib => ../golib
-
-replace github.com/yubo/apiserver => ../apiserver
+go 1.20
 
 require (
 	github.com/davecgh/go-spew v1.1.1
@@ -14,7 +10,7 @@ require (
 	github.com/imdario/mergo v0.3.6
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
-	github.com/yubo/golib v0.0.3-0.20220619092530-4b2095953f3f
+	github.com/yubo/golib v0.0.3-0.20230413153058-1831b5929edc
 	golang.org/x/net v0.4.0
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
 	golang.org/x/term v0.3.0
