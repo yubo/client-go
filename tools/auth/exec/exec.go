@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/yubo/client-go/pkg/apis/clientauthentication"
+	v1 "github.com/yubo/client-go/pkg/apis/clientauthentication/v1"
 	"github.com/yubo/client-go/rest"
 	"github.com/yubo/golib/runtime"
 	"github.com/yubo/golib/scheme"
@@ -30,7 +31,7 @@ import (
 
 const execInfoEnv = "KUBERNETES_EXEC_INFO"
 
-//var scheme = runtime.NewScheme()
+// var scheme = runtime.NewScheme()
 var codecs = scheme.Codecs
 
 //func init() {
@@ -68,7 +69,7 @@ func LoadExecCredentialFromEnv() (runtime.Object, *rest.Config, error) {
 // Note that the returned rest.Config will use anonymous authentication, since the exec plugin has
 // not returned credentials for this cluster yet.
 func LoadExecCredential(data []byte) (runtime.Object, *rest.Config, error) {
-	obj := &clientauthentication.ExecCredential{}
+	obj := &v1.ExecCredential{}
 	_, err := codecs.UniversalDeserializer().Decode(data, obj)
 	if err != nil {
 		return nil, nil, fmt.Errorf("decode: %w", err)
@@ -78,7 +79,12 @@ func LoadExecCredential(data []byte) (runtime.Object, *rest.Config, error) {
 		return nil, nil, errors.New("ExecCredential does not contain cluster information")
 	}
 
-	restConfig, err := rest.ExecClusterToConfig(obj.Spec.Cluster)
+	var execCredential clientauthentication.ExecCredential
+	if err := v1.Convert_v1_ExecCredential_To_clientauthentication_ExecCredential(obj, &execCredential); err != nil {
+		return nil, nil, fmt.Errorf("cannot convert to ExecCredential: %w", err)
+	}
+
+	restConfig, err := rest.ExecClusterToConfig(execCredential.Spec.Cluster)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot create rest.Config: %w", err)
 	}

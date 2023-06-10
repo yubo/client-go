@@ -17,7 +17,8 @@ limitations under the License.
 package retry
 
 import (
-	"github.com/yubo/golib/api"
+	"time"
+
 	"github.com/yubo/golib/api/errors"
 	"github.com/yubo/golib/util/wait"
 )
@@ -26,7 +27,7 @@ import (
 // are making changes to the same resource.
 var DefaultRetry = wait.Backoff{
 	Steps:    5,
-	Duration: api.NewDuration("10ms"),
+	Duration: 10 * time.Millisecond,
 	Factor:   1.0,
 	Jitter:   0.1,
 }
@@ -36,7 +37,7 @@ var DefaultRetry = wait.Backoff{
 // active management by one or more controllers.
 var DefaultBackoff = wait.Backoff{
 	Steps:    4,
-	Duration: api.NewDuration("10ms"),
+	Duration: 10 * time.Millisecond,
 	Factor:   5.0,
 	Jitter:   0.1,
 }

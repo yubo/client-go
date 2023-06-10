@@ -1413,6 +1413,9 @@ func (r Result) Into(obj runtime.Object) error {
 		// Check whether the result has a Status object in the body and prefer that.
 		return r.Error()
 	}
+	if obj == nil {
+		return nil
+	}
 	if r.decoder == nil {
 		return fmt.Errorf("serializer for %s doesn't exist", r.contentType)
 	}

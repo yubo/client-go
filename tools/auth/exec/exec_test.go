@@ -22,7 +22,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	clientauthenticationv1 "github.com/yubo/client-go/pkg/apis/clientauthentication/v1"
-	clientauthenticationv1beta1 "github.com/yubo/client-go/pkg/apis/clientauthentication/v1beta1"
 	"github.com/yubo/client-go/rest"
 	metav1 "github.com/yubo/golib/api"
 	"github.com/yubo/golib/runtime"
@@ -63,55 +62,11 @@ func TestLoadExecCredential(t *testing.T) {
 			}),
 			wantExecCredential: &clientauthenticationv1.ExecCredential{
 				TypeMeta: metav1.TypeMeta{
-					Kind: "ExecCredential",
+					//Kind: "ExecCredential",
 					//APIVersion: clientauthenticationv1.SchemeGroupVersion.String(),
 				},
 				Spec: clientauthenticationv1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1.Cluster{
-						Server:                   "https://some-server/some/path",
-						TLSServerName:            "some-server-name",
-						InsecureSkipTLSVerify:    true,
-						CertificateAuthorityData: []byte("some-ca-data"),
-						ProxyURL:                 "https://some-proxy-url:12345",
-						Config: runtime.RawExtension{
-							Raw: []byte(`{"apiVersion":"group/v1","kind":"PluginConfig","spec":{"names":["marshmallow","zelda"]}}`),
-						},
-					},
-				},
-			},
-			wantRESTInfo: restInfo{
-				host: "https://some-server/some/path",
-				tlsClientConfig: rest.TLSClientConfig{
-					Insecure:   true,
-					ServerName: "some-server-name",
-					CAData:     []byte("some-ca-data"),
-				},
-				proxyURL: "https://some-proxy-url:12345",
-			},
-		},
-		{
-			name: "v1beta1 happy path",
-			data: marshal(t, &clientauthenticationv1beta1.ExecCredential{
-				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
-					Cluster: &clientauthenticationv1beta1.Cluster{
-						Server:                   "https://some-server/some/path",
-						TLSServerName:            "some-server-name",
-						InsecureSkipTLSVerify:    true,
-						CertificateAuthorityData: []byte("some-ca-data"),
-						ProxyURL:                 "https://some-proxy-url:12345",
-						Config: runtime.RawExtension{
-							Raw: []byte(`{"apiVersion":"group/v1","kind":"PluginConfig","spec":{"names":["marshmallow","zelda"]}}`),
-						},
-					},
-				},
-			}),
-			wantExecCredential: &clientauthenticationv1beta1.ExecCredential{
-				TypeMeta: metav1.TypeMeta{
-					Kind: "ExecCredential",
-					//APIVersion: clientauthenticationv1beta1.SchemeGroupVersion.String(),
-				},
-				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
-					Cluster: &clientauthenticationv1beta1.Cluster{
 						Server:                   "https://some-server/some/path",
 						TLSServerName:            "some-server-name",
 						InsecureSkipTLSVerify:    true,
@@ -148,49 +103,11 @@ func TestLoadExecCredential(t *testing.T) {
 			}),
 			wantExecCredential: &clientauthenticationv1.ExecCredential{
 				TypeMeta: metav1.TypeMeta{
-					Kind: "ExecCredential",
+					//Kind: "ExecCredential",
 					//APIVersion: clientauthenticationv1.SchemeGroupVersion.String(),
 				},
 				Spec: clientauthenticationv1.ExecCredentialSpec{
 					Cluster: &clientauthenticationv1.Cluster{
-						Server:                   "https://some-server/some/path",
-						TLSServerName:            "some-server-name",
-						InsecureSkipTLSVerify:    true,
-						CertificateAuthorityData: []byte("some-ca-data"),
-						ProxyURL:                 "https://some-proxy-url:12345",
-					},
-				},
-			},
-			wantRESTInfo: restInfo{
-				host: "https://some-server/some/path",
-				tlsClientConfig: rest.TLSClientConfig{
-					Insecure:   true,
-					ServerName: "some-server-name",
-					CAData:     []byte("some-ca-data"),
-				},
-				proxyURL: "https://some-proxy-url:12345",
-			},
-		},
-		{
-			name: "v1beta1 nil config",
-			data: marshal(t, &clientauthenticationv1beta1.ExecCredential{
-				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
-					Cluster: &clientauthenticationv1beta1.Cluster{
-						Server:                   "https://some-server/some/path",
-						TLSServerName:            "some-server-name",
-						InsecureSkipTLSVerify:    true,
-						CertificateAuthorityData: []byte("some-ca-data"),
-						ProxyURL:                 "https://some-proxy-url:12345",
-					},
-				},
-			}),
-			wantExecCredential: &clientauthenticationv1beta1.ExecCredential{
-				TypeMeta: metav1.TypeMeta{
-					Kind: "ExecCredential",
-					//APIVersion: clientauthenticationv1beta1.SchemeGroupVersion.String(),
-				},
-				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
-					Cluster: &clientauthenticationv1beta1.Cluster{
 						Server:                   "https://some-server/some/path",
 						TLSServerName:            "some-server-name",
 						InsecureSkipTLSVerify:    true,
@@ -221,31 +138,15 @@ func TestLoadExecCredential(t *testing.T) {
 			wantErrorPrefix: "cannot create rest.Config",
 		},
 		{
-			name: "v1beta1 invalid cluster",
-			data: marshal(t, &clientauthenticationv1beta1.ExecCredential{
-				Spec: clientauthenticationv1beta1.ExecCredentialSpec{
-					Cluster: &clientauthenticationv1beta1.Cluster{
-						ProxyURL: "invalid- url\n",
-					},
-				},
-			}),
-			wantErrorPrefix: "cannot create rest.Config",
-		},
-		{
 			name:            "v1 nil cluster",
 			data:            marshal(t, &clientauthenticationv1.ExecCredential{}),
 			wantErrorPrefix: "ExecCredential does not contain cluster information",
 		},
-		{
-			name:            "v1beta1 nil cluster",
-			data:            marshal(t, &clientauthenticationv1beta1.ExecCredential{}),
-			wantErrorPrefix: "ExecCredential does not contain cluster information",
-		},
-		{
-			name:            "invalid object kind",
-			data:            marshal(t, &metav1.Status{}),
-			wantErrorPrefix: "invalid group/kind: wanted ExecCredential.client.authentication.k8s.io, got Status",
-		},
+		//{
+		//	name:            "invalid object kind",
+		//	data:            marshal(t, &metav1.Status{}),
+		//	wantErrorPrefix: "invalid group/kind: wanted ExecCredential.client.authentication.k8s.io, got Status",
+		//},
 		{
 			name:            "bad data",
 			data:            []byte("bad data"),

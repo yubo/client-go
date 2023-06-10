@@ -28,7 +28,9 @@ import (
 	"k8s.io/klog/v2"
 
 	restclient "github.com/yubo/client-go/rest"
+	"github.com/yubo/client-go/tools/clientcmd/api"
 	clientcmdapi "github.com/yubo/client-go/tools/clientcmd/api"
+	v1 "github.com/yubo/client-go/tools/clientcmd/api/v1"
 	"github.com/yubo/client-go/util/homedir"
 	"github.com/yubo/golib/runtime"
 	utilerrors "github.com/yubo/golib/util/errors"
@@ -397,9 +399,35 @@ func LoadFromFile(filename string) (*clientcmdapi.Config, error) {
 	return config, nil
 }
 
+func Load(data []byte) (*clientcmdapi.Config, error) {
+	return loadV1(data)
+}
+
 // Load takes a byte slice and deserializes the contents into Config object.
 // Encapsulates deserialization without assuming the source is a file.
-func Load(data []byte) (*clientcmdapi.Config, error) {
+func loadV1(data []byte) (*clientcmdapi.Config, error) {
+	config := clientcmdapi.NewConfig()
+	// if there's no data in a file, return the default object instead of failing (DecodeInto reject empty input)
+	if len(data) == 0 {
+		return config, nil
+	}
+
+	configV1 := &v1.Config{}
+	_, err := clientcmdapi.Codec.Decode(data, configV1)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := api.Convert_v1_Config_To_api_Config(configV1, config); err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
+// Load takes a byte slice and deserializes the contents into Config object.
+// Encapsulates deserialization without assuming the source is a file.
+func load(data []byte) (*clientcmdapi.Config, error) {
 	config := clientcmdapi.NewConfig()
 	// if there's no data in a file, return the default object instead of failing (DecodeInto reject empty input)
 	if len(data) == 0 {

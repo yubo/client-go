@@ -22,7 +22,7 @@ import (
 )
 
 func TestValidatesHostParameter(t *testing.T) {
-	version := "v1"
+	// disable group version
 	testCases := []struct {
 		Host    string
 		APIPath string
@@ -30,13 +30,13 @@ func TestValidatesHostParameter(t *testing.T) {
 		URL string
 		Err bool
 	}{
-		{"127.0.0.1", "", "http://127.0.0.1/" + version, false},
-		{"127.0.0.1:8080", "", "http://127.0.0.1:8080/" + version, false},
-		{"foo.bar.com", "", "http://foo.bar.com/" + version, false},
-		{"http://host/prefix", "", "http://host/prefix/" + version, false},
-		{"http://host", "", "http://host/" + version, false},
-		{"http://host", "/", "http://host/" + version, false},
-		{"http://host", "/other", "http://host/other/" + version, false},
+		{"127.0.0.1", "", "http://127.0.0.1/", false},
+		{"127.0.0.1:8080", "", "http://127.0.0.1:8080/", false},
+		{"foo.bar.com", "", "http://foo.bar.com/", false},
+		{"http://host/prefix", "", "http://host/prefix", false},
+		{"http://host", "", "http://host/", false},
+		{"http://host", "/", "http://host/", false},
+		{"http://host", "/other", "http://host/other", false},
 		{"host/server", "", "", true},
 	}
 	for i, testCase := range testCases {

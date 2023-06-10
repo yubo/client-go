@@ -181,6 +181,7 @@ func autoConvert_v1_AuthInfo_To_api_AuthInfo(in *v1.AuthInfo, out *AuthInfo) err
 	out.Token = in.Token
 	out.TokenFile = in.TokenFile
 	out.Impersonate = in.Impersonate
+	out.ImpersonateUID = in.ImpersonateUID
 	out.ImpersonateGroups = *(*[]string)(unsafe.Pointer(&in.ImpersonateGroups))
 	out.ImpersonateUserExtra = *(*map[string][]string)(unsafe.Pointer(&in.ImpersonateUserExtra))
 	out.Username = in.Username
@@ -215,6 +216,7 @@ func autoConvert_api_AuthInfo_To_v1_AuthInfo(in *AuthInfo, out *v1.AuthInfo) err
 	out.Token = in.Token
 	out.TokenFile = in.TokenFile
 	out.Impersonate = in.Impersonate
+	out.ImpersonateUID = in.ImpersonateUID
 	out.ImpersonateGroups = *(*[]string)(unsafe.Pointer(&in.ImpersonateGroups))
 	out.ImpersonateUserExtra = *(*map[string][]string)(unsafe.Pointer(&in.ImpersonateUserExtra))
 	out.Username = in.Username
@@ -269,6 +271,7 @@ func autoConvert_v1_Cluster_To_api_Cluster(in *v1.Cluster, out *Cluster) error {
 	out.CertificateAuthority = in.CertificateAuthority
 	out.CertificateAuthorityData = *(*[]byte)(unsafe.Pointer(&in.CertificateAuthorityData))
 	out.ProxyURL = in.ProxyURL
+	out.DisableCompression = in.DisableCompression
 	if err := Convert_Slice_v1_NamedExtension_To_Map_string_To_runtime_Object(&in.Extensions, &out.Extensions); err != nil {
 		return err
 	}
@@ -288,6 +291,7 @@ func autoConvert_api_Cluster_To_v1_Cluster(in *Cluster, out *v1.Cluster) error {
 	out.CertificateAuthority = in.CertificateAuthority
 	out.CertificateAuthorityData = *(*[]byte)(unsafe.Pointer(&in.CertificateAuthorityData))
 	out.ProxyURL = in.ProxyURL
+	out.DisableCompression = in.DisableCompression
 	if err := Convert_Map_string_To_runtime_Object_To_Slice_v1_NamedExtension(&in.Extensions, &out.Extensions); err != nil {
 		return err
 	}
@@ -300,6 +304,9 @@ func Convert_api_Cluster_To_v1_Cluster(in *Cluster, out *v1.Cluster) error {
 }
 
 func autoConvert_v1_Config_To_api_Config(in *v1.Config, out *Config) error {
+	// add
+	v1.SetObjectDefaults_Config(in)
+
 	// INFO: in.Kind opted out of conversion generation
 	// INFO: in.APIVersion opted out of conversion generation
 	if err := Convert_v1_Preferences_To_api_Preferences(&in.Preferences, &out.Preferences); err != nil {
@@ -391,6 +398,7 @@ func autoConvert_v1_ExecConfig_To_api_ExecConfig(in *v1.ExecConfig, out *ExecCon
 	out.APIVersion = in.APIVersion
 	out.InstallHint = in.InstallHint
 	out.ProvideClusterInfo = in.ProvideClusterInfo
+	out.InteractiveMode = ExecInteractiveMode(in.InteractiveMode)
 	return nil
 }
 
@@ -407,6 +415,9 @@ func autoConvert_api_ExecConfig_To_v1_ExecConfig(in *ExecConfig, out *v1.ExecCon
 	out.InstallHint = in.InstallHint
 	out.ProvideClusterInfo = in.ProvideClusterInfo
 	// INFO: in.Config opted out of conversion generation
+	out.InteractiveMode = v1.ExecInteractiveMode(in.InteractiveMode)
+	// INFO: in.StdinUnavailable opted out of conversion generation
+	// INFO: in.StdinUnavailableMessage opted out of conversion generation
 	return nil
 }
 

@@ -357,7 +357,7 @@ users:
 
 	_, err = LoadFromFile(configFile.Name())
 	if err == nil || !strings.Contains(err.Error(),
-		"error converting *[]NamedContext into *map[string]*api.Context: duplicate name \"kubeconfig-context\" in list") {
+		"error converting *[]NamedContext into *map[string]*Context: duplicate name \"kubeconfig-context\" in list") {
 		t.Error("Expected error in loading duplicate context name, got none")
 	}
 }
@@ -397,7 +397,7 @@ users:
 
 	_, err = LoadFromFile(configFile.Name())
 	if err == nil || !strings.Contains(err.Error(),
-		"error converting *[]NamedAuthInfo into *map[string]*api.AuthInfo: duplicate name \"kubeconfig-user\" in list") {
+		"error converting *[]NamedAuthInfo into *map[string]*AuthInfo: duplicate name \"kubeconfig-user\" in list") {
 		t.Error("Expected error in loading duplicate user name, got none")
 	}
 }
